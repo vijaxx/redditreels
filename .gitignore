@@ -1,0 +1,14 @@
+__pycache__/
+*.pyc
+.DS_Store
+*.log
+clips/
+reels/
+processing/
+output/
+logs/
+config/credentials.json
+config/*.bak*
+config/*cookies*
+config/*secret*
+*.env
