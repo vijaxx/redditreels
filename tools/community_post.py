@@ -50,7 +50,7 @@ TITLE: "{title}"
 
 Output: ONE engaging text post (10-25 words), ends with a question that invites comments.
 Format: just the post text, no quotes, no preamble. Use 1-2 emojis max.
-Example: "Imagine if you could only post one thing for the rest of your life — what would it be? 🤔"
+Example: "Imagine if you could only post one thing for the rest of your life — what would it be? "
 """
     msg = client.messages.create(
         model="claude-haiku-4-5",
@@ -125,7 +125,7 @@ def main():
         f.write(f"\n## {datetime.now().strftime('%Y-%m-%d %H:%M')} — about {vid_id}\n")
         f.write(f"**Video:** [{title[:80]}](https://youtube.com/shorts/{vid_id})\n\n")
         f.write(f"{post_text}\n")
-    log_lines.append(f"  ✓ post text appended to {queue_path}")
+    log_lines.append(f"   post text appended to {queue_path}")
     log_lines.append(f"  Manual step: studio.youtube.com → Community → New post → paste")
     seen.add(vid_id)
     _seen_save(seen)

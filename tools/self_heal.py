@@ -1,16 +1,8 @@
 #!/usr/bin/env python3
-"""
-self_heal.py — auto-recover from common pipeline failures.
-
-Checks every 30 min via cron OR called ad-hoc. Detects + fixes:
-  - Chrome :9223 died → relaunch via ensure_chrome.sh
-  - Stale uploader python process hung > 60 min → kill + log
-  - Disk free < 5 GB → run cleanup.sh aggressively
-  - Failure streak detected → notify
-  - launchd job unloaded → reload
-
-Built 2026-06-03 overnight.
-"""
+"""Runs every 30 minutes (or on demand) and fixes the failure modes that
+come up in practice: Chrome on :9223 died (relaunch it), an uploader process
+hung for over an hour (kill it), disk space under 5GB (clean up aggressively),
+a failure streak (notify), or the launchd job somehow got unloaded (reload it)."""
 import os, sys, json, pathlib, subprocess, urllib.request
 from datetime import datetime
 
@@ -43,7 +35,7 @@ def heal_chrome() -> bool:
         urllib.request.urlopen("http://127.0.0.1:9223/json/version", timeout=3).read()
         return False  # alive, no heal needed
     except Exception:
-        _log("⚠ Chrome :9223 DEAD — relaunching via ensure_chrome.sh")
+        _log(" Chrome :9223 DEAD — relaunching via ensure_chrome.sh")
         try:
             r = subprocess.run(["/bin/zsh", str(HOME / "RedditReels/ensure_chrome.sh")],
                                 capture_output=True, text=True, timeout=60)
@@ -62,7 +54,7 @@ def heal_ollama() -> bool:
         urllib.request.urlopen("http://127.0.0.1:11434/api/version", timeout=3).read()
         return False  # up, no heal needed
     except Exception:
-        _log("⚠ Ollama DOWN — relaunching Ollama.app")
+        _log(" Ollama DOWN — relaunching Ollama.app")
         try:
             subprocess.run(["open", "-a", "Ollama"], capture_output=True, timeout=30)
             # give it a moment to boot
@@ -71,11 +63,11 @@ def heal_ollama() -> bool:
                 _t.sleep(2)
                 try:
                     urllib.request.urlopen("http://127.0.0.1:11434/api/version", timeout=3).read()
-                    _log("  ✓ Ollama back up")
+                    _log("   Ollama back up")
                     return True
                 except Exception:
                     continue
-            _log("  ⚠ Ollama still not responding after relaunch")
+            _log("   Ollama still not responding after relaunch")
             return True
         except Exception as e:
             _log(f"  relaunch failed: {e}")
@@ -104,7 +96,7 @@ def heal_stale_python() -> int:
                 elif colons == 2: h, mm, ss = etime.split(":"); mins += int(h)*60 + int(mm)
             except: continue
             if mins > 60:
-                _log(f"⚠ STALE pid {pid} ({mins}min) — killing")
+                _log(f" STALE pid {pid} ({mins}min) — killing")
                 subprocess.run(["kill", "-TERM", pid])
                 killed += 1
     except Exception as e:
@@ -119,7 +111,7 @@ def heal_disk() -> bool:
         free_kb = int(df.strip().split("\n")[-1].split()[3])
         free_gb = free_kb / 1024 / 1024
         if free_gb < 5:
-            _log(f"⚠ DISK low ({free_gb:.1f} GB free) — aggressive cleanup")
+            _log(f" DISK low ({free_gb:.1f} GB free) — aggressive cleanup")
             # Delete old reels + processing >3d
             subprocess.run(["find", str(HOME / "RedditReels/reels"), "-name", "*.mp4",
                              "-mtime", "+3", "-delete"], capture_output=True)
@@ -142,7 +134,7 @@ def heal_launchd() -> bool:
             ("com.pipelines.morningbatch", HOME / "Library/LaunchAgents/com.pipelines.morningbatch.plist"),
         ]:
             if label not in out:
-                _log(f"⚠ launchd missing: {label} — reloading")
+                _log(f" launchd missing: {label} — reloading")
                 if plist.exists():
                     subprocess.run(["launchctl", "load", str(plist)], capture_output=True)
                     fixed = True
@@ -167,7 +159,7 @@ def run():
         try:
             sys.path.insert(0, str(HOME / "RedditReels/tools"))
             from notify import notify
-            notify("🔧 Self-heal triggered", f"Actions: {', '.join(actions)}")
+            notify(" Self-heal triggered", f"Actions: {', '.join(actions)}")
         except: pass
 
 

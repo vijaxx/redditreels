@@ -110,11 +110,11 @@ def upload_reel_api(video_path, caption, cfg, _log=None) -> str:
             perma = st.get("permalink_url")
             if perma or phase in ("ready", "published"):
                 url = ("https://www.facebook.com" + perma) if perma and perma.startswith("/") else (perma or f"video_id={video_id}")
-                L.info(f"FB-API ✅ published: {url}")
+                L.info(f"FB-API  published: {url}")
                 return url
         except Exception:
             continue
-    L.info(f"FB-API ✅ published (status pending) video_id={video_id}")
+    L.info(f"FB-API  published (status pending) video_id={video_id}")
     return f"fb_video_id={video_id}"
 
 

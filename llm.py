@@ -1,27 +1,13 @@
 #!/usr/bin/env python3
-"""
-llm.py — FREE LLM backend with an Anthropic-compatible shim.
+"""Anthropic-compatible shim so the pipeline can run on a free LLM provider
+instead of a paid Claude key.
 
-Built 2026-06-04 after Anthropic API ran out of funds. Lets the whole RR
-pipeline run on a FREE provider (Google Gemini or Groq — both have free tiers,
-no credit card) with a ONE-LINE change per file:
+    from anthropic import Anthropic   ->   from llm import Anthropic
 
-    from anthropic import Anthropic     →     from llm import Anthropic
-
-The shim mimics client.messages.create(...) and client.messages.stream(...)
-returning the same shape (.content[0].text), so existing code works unchanged.
-
-PROVIDER SELECTION (first key found in ~/RedditReels/config/credentials.json):
-  1. "gemini_api_key"  → Google Gemini 2.0 Flash   (free: ~1500 req/day, no card)
-  2. "groq_api_key"    → Groq Llama 3.3 70B          (free: generous, no card)
-  3. "anthropic_api_key" → falls back to real Claude (if funds exist)
-
-Pure stdlib (urllib) — no new pip installs.
-
-GET A FREE KEY (1 min, no credit card):
-  Gemini: https://aistudio.google.com/apikey  → paste as "gemini_api_key"
-  Groq:   https://console.groq.com/keys       → paste as "groq_api_key"
-"""
+Mimics client.messages.create(...)/client.messages.stream(...) closely enough
+that call sites don't change. Picks the first key it finds in credentials.json
+-- gemini_api_key (Gemini 2.0 Flash), then groq_api_key (Llama 3.3 70B), then
+falls back to a real Anthropic key if one's configured. Pure stdlib."""
 import json, pathlib, urllib.request, urllib.error, time
 
 CREDS = pathlib.Path.home() / "RedditReels/config/credentials.json"

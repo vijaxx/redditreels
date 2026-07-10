@@ -1,15 +1,8 @@
 #!/usr/bin/env python3
-"""
-story_filter.py — pre-render quality gate for Reddit stories.
-
-Today's fetch_story picks story by upvotes + length. Quality varies wildly.
-This adds a Claude judgment pass: score each candidate 0-100 on viral potential
-before committing to render. Reject < 40, retry. Saves 4-6 min of bad renders.
-
-Used by fetch_story.py as final filter on top candidates.
-
-Built 2026-06-03 overnight.
-"""
+"""Quality gate before a story gets rendered. fetch_story picks by upvotes
+and length, which varies wildly in practice -- this adds a judgment pass that
+scores each candidate 0-100 on viral potential and rejects anything under 40,
+saving several minutes of rendering something that wasn't going to work."""
 import json, pathlib
 
 

@@ -1,21 +1,8 @@
 #!/usr/bin/env python3
-"""
-yt_playlist_curator.py — auto-create + maintain themed playlists.
-
-Playlists boost watch-time per session (binge viewing), and YT's algo rewards
-videos that are in playlists more than orphans. Creates these playlists:
-
-  - "Best AITA Stories" — all videos from r/AmItheAsshole sub
-  - "Workplace Drama" — r/antiwork + r/MaliciousCompliance + r/IDontWorkHereLady
-  - "MIL Drama" — r/JustNoMIL
-  - "Petty Revenge" — r/pettyrevenge + r/ProRevenge
-  - "TIFU Disasters" — r/tifu
-  - "Best of the Week" — top 5 by score in last 7 days
-
-Run daily — adds new videos to matching playlist.
-
-Built 2026-06-03 overnight.
-"""
+"""Keeps a handful of themed playlists populated by subreddit -- AITA
+stories, workplace drama, MIL drama, petty revenge, TIFU disasters, plus a
+rolling best-of-the-week. Playlists help watch time per session and the
+algorithm seems to favor videos that belong to one over orphans. Run daily."""
 import os, sys, json, pathlib
 from typing import Optional
 from datetime import datetime, timezone, timedelta
@@ -28,27 +15,27 @@ LOG = pathlib.Path.home() / "PipelineCleanup" / "playlist_curator.log"
 
 PLAYLISTS = {
     "best_aita": {
-        "title": "🏛️ Best AITA Reddit Stories",
+        "title": " Best AITA Reddit Stories",
         "subs": ["AmItheAsshole"],
         "description": "Am I The Asshole? — the most controversial Reddit verdicts. Daily."
     },
     "workplace_drama": {
-        "title": "💼 Workplace Drama — Reddit Stories",
+        "title": " Workplace Drama — Reddit Stories",
         "subs": ["antiwork", "MaliciousCompliance", "IDontWorkHereLady", "EntitledPeople"],
         "description": "Bosses, coworkers, and quitting stories that hit different."
     },
     "mil_drama": {
-        "title": "👰 Mother-in-Law Drama — JustNo Stories",
+        "title": " Mother-in-Law Drama — JustNo Stories",
         "subs": ["JustNoMIL", "relationship_advice"],
         "description": "JustNo MIL meltdowns and family tension. Updated daily."
     },
     "revenge_stories": {
-        "title": "💀 Petty Revenge & Karma — Reddit",
+        "title": " Petty Revenge & Karma — Reddit",
         "subs": ["pettyrevenge", "ProRevenge", "MaliciousCompliance"],
         "description": "Real revenge stories — the satisfying kind. Justice served."
     },
     "tifu": {
-        "title": "🤦 TIFU — Today I F*cked Up",
+        "title": " TIFU — Today I F*cked Up",
         "subs": ["tifu", "confession"],
         "description": "Embarrassing mistakes & confessions you can't unhear."
     },
@@ -98,10 +85,10 @@ def get_or_create_playlist(yt, key: str, info: dict, state: dict) -> Optional[st
         }).execute()
         pid = r["id"]
         state["playlists"][key] = pid
-        _log(f"  ✓ created playlist: {info['title']} → {pid}")
+        _log(f"   created playlist: {info['title']} → {pid}")
         return pid
     except Exception as e:
-        _log(f"  ✗ create playlist failed: {e}")
+        _log(f"   create playlist failed: {e}")
         return None
 
 
@@ -117,7 +104,7 @@ def add_video_to_playlist(yt, video_id: str, playlist_id: str, state: dict) -> b
         state["added"].append(key)
         return True
     except Exception as e:
-        _log(f"  ✗ add {video_id} → {playlist_id}: {e}")
+        _log(f"   add {video_id} → {playlist_id}: {e}")
         return False
 
 
@@ -146,7 +133,7 @@ def run():
                 if any(s.lower() == sub for s in info["subs"]):
                     if k in pids and add_video_to_playlist(yt, vid, pids[k], state):
                         added += 1
-                        _log(f"  ✓ {vid} → {info['title']}")
+                        _log(f"   {vid} → {info['title']}")
                     break
         except Exception: continue
     _save_state(state)

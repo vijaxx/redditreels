@@ -74,7 +74,7 @@ def auth_broad():
         sys.exit(2)
     cfg["youtube_refresh_token_broad"] = creds.refresh_token
     save_cfg(cfg)
-    print(f"✓ Broad-scope refresh token saved to {CREDS_FILE}")
+    print(f" Broad-scope refresh token saved to {CREDS_FILE}")
     print("  Scopes:", BROAD_SCOPES)
 
 
@@ -177,7 +177,7 @@ def main():
             r = results[vid]
             tier = r.get("ad_state","?")
             est = (entry.get("ad_safe_estimate") or {}).get("ad_safe", "?")
-            match = "✓ matches est" if est == tier or (est == "yellow" and tier == "yellow_or_red") else "≠ est"
+            match = " matches est" if est == tier or (est == "yellow" and tier == "yellow_or_red") else "≠ est"
             print(f"  {vid}  ad={tier:<15s} est={est:<6s} {match}  '{entry.get('title','')[:60]}'")
 
     # Rewrite file

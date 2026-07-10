@@ -179,7 +179,7 @@ def run():
                 "categoryId": snip.get("categoryId", "24"),
             }
             yt.videos().update(part="snippet", body={"id": vid, "snippet": new_snip}).execute()
-            _log(f"  ✓ {vid} ({reason}, {age_h:.0f}h): '{orig_title[:35]}…' → '{alt[:55]}'")
+            _log(f"   {vid} ({reason}, {age_h:.0f}h): '{orig_title[:35]}…' → '{alt[:55]}'")
             seen[vid] = {
                 "orig": orig_title, "alt": alt,
                 "reason": reason,
@@ -188,7 +188,7 @@ def run():
             }
             rotated += 1
         except Exception as e:
-            _log(f"  ✗ {vid} update failed: {e}")
+            _log(f"   {vid} update failed: {e}")
     _save_seen(seen)
     _log(f"=== summary: rotated={rotated}/{len(cands)} (protected {skipped_d} Pattern-D) ===")
 

@@ -198,7 +198,7 @@ def print_dashboard(want_json: bool):
     hr()
     print()
     if "error" in channel:
-        print(f"  ⚠ Channel stats unavailable: {channel['error']}")
+        print(f"  Channel stats unavailable: {channel['error']}")
     else:
         print(f"  Channel: {channel['channel_title']}  (id={channel['channel_id']})")
         print(f"  Lifetime: {channel['subs']:>6} subs  ·  {channel['total_views']:>8} views  ·  {channel['video_count']:>4} videos")
@@ -213,9 +213,9 @@ def print_dashboard(want_json: bool):
     hr()
     for name, info in PIPELINES.items():
         s = per_pipeline[name]
-        marker = "✓" if s.get("posts", 0) > 0 and s.get("errors", 0) == 0 else \
-                 "⚠" if s.get("posts", 0) > 0 else "✗"
-        print(f"  {marker} {name:12s}  posts: {s.get('posts',0):>3}  "
+        marker = "ok" if s.get("posts", 0) > 0 and s.get("errors", 0) == 0 else \
+                 "warn" if s.get("posts", 0) > 0 else "idle"
+        print(f"  {marker:4s} {name:12s}  posts: {s.get('posts',0):>3}  "
               f"YT-ok: {s.get('success_yt',0):>3}  YT-fail: {s.get('fail_yt',0):>2}  "
               f"errors: {s.get('errors',0):>3}")
     print()

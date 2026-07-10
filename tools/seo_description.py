@@ -1,17 +1,8 @@
 #!/usr/bin/env python3
-"""
-seo_description.py — boost YT description SEO.
-
-Currently RR's build_description writes a basic seo_first_line. This adds:
-  - Keyword-density optimization (Claude picks 5 high-volume YT search terms)
-  - Timestamp markers (YT loves these even on Shorts: "0:00 The hook / 0:05 The setup / ...")
-  - Internal-link section (cross-promotes other RR videos by topic similarity)
-  - YT-search-friendly question terms ("What is X", "How to Y", etc.)
-
-Called from redditreels.py build_description as additional content.
-
-Built 2026-06-03 overnight.
-"""
+"""Extends the base YouTube description with keyword-optimized terms
+(Claude picks a handful of high-volume search terms), timestamp markers
+(YouTube surfaces these even on Shorts), links to related past videos, and a
+couple of question-form phrases people actually search."""
 import json, pathlib
 from typing import List
 
@@ -28,19 +19,19 @@ VIDEO TITLE: {title}
 STORY (first 300 chars): {narration[:300]}
 SUBREDDIT: r/{sub}
 
-Block 1: "🔍 People also search:" — 5 long-tail YT search queries someone might type to find this video. Each on its own line. NO hashtags. Just natural search phrases.
+Block 1: " People also search:" — 5 long-tail YT search queries someone might type to find this video. Each on its own line. NO hashtags. Just natural search phrases.
 
-Block 2: "❓ FAQ:" — 3 question-answer pairs framed for YT/Google search. Each Q + A on ONE line each, format "Q: ... | A: ..."
+Block 2: " FAQ:" — 3 question-answer pairs framed for YT/Google search. Each Q + A on ONE line each, format "Q: ... | A: ..."
 
 OUTPUT EXACTLY:
-🔍 People also search:
+ People also search:
 <phrase 1>
 <phrase 2>
 <phrase 3>
 <phrase 4>
 <phrase 5>
 
-❓ FAQ:
+ FAQ:
 Q: ... | A: ...
 Q: ... | A: ...
 Q: ... | A: ...

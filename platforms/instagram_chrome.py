@@ -1,18 +1,11 @@
 #!/usr/bin/env python3
-"""
-instagram_chrome.py — Instagram Reels upload via Chrome :9223.
+"""Instagram Reels upload via Chrome on :9223. Experimental, not wired into
+the scheduled run yet.
 
-CAUTION: IG bot detection is also aggressive. Web uploader was added 2023.
-Selenium works but breaks often when IG updates UI.
-
-REQUIREMENTS:
-- Manual one-time login: instagram.com via Chrome :9223 → log into target account
-- IG cookies persist in profile
-
-API: upload(video_path, title, description, tags, cfg) → url or None
-
-Built 2026-06-03 overnight — experimental, NOT wired to live cron yet.
-"""
+IG's bot detection is aggressive and the web uploader breaks whenever they
+touch the UI. Needs a one-time manual login in that Chrome profile before this
+works -- cookies persist after that. API: upload(video_path, title,
+description, tags, cfg) -> url or None."""
 import time, urllib.request, json, pathlib
 from typing import Optional
 

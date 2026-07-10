@@ -24,36 +24,36 @@ ENGAGEMENT_SCOPE = "https://www.googleapis.com/auth/youtube.force-ssl"
 # Reddit-story-flavored prompts. One picked at random per upload (deterministic
 # enough with the video_id seed to give consistent per-video pin).
 # 2026-07-01 — "Am I The Villain?" series alignment: the reel opens
-# "You decide — am I the villain?" and the caption signs off "⚖️ Verdict in the
+# "You decide — am I the villain?" and the caption signs off " Verdict in the
 # comments — you judge." The pinned comment now COMPLETES that verdict ritual so
 # the pinned CTA matches the hook/title/caption — one recognizable, subscribable
 # format. Kept a few follow/part-2 lines (subscriber-growth lever) but tied them
 # to the "new villain every day" series frame.
 RR_PROMPTS = [
     # Verdict-bait — the series ritual: drives reply chains (viewers arguing verdicts)
-    "⚖️ You decide: villain or NOT the villain? Drop your verdict 👇",
-    "Verdict time 👇 was OP the villain here, or totally justified?",
-    "Am I the villain? YOU be the judge — comment your verdict ⚖️",
-    "🔴 Villain or 🟢 justified? Cast your verdict below 👇",
+    " You decide: villain or NOT the villain? Drop your verdict ",
+    "Verdict time  was OP the villain here, or totally justified?",
+    "Am I the villain? YOU be the judge — comment your verdict ",
+    " Villain or  justified? Cast your verdict below ",
     "Jury's out. Villain or not? Comment your verdict — I read every one.",
-    "Guilty or innocent? Drop your one-word verdict 💬",
+    "Guilty or innocent? Drop your one-word verdict ",
     # Follow-bait tied to the series — drives subscribers ("a new villain daily")
-    "Follow for tomorrow's case — a new villain every day. 👇",
+    "Follow for tomorrow's case — a new villain every day. ",
     "Follow + comment 'VERDICT' and I'll post what happened next.",
-    "🔔 New villain on trial daily. Follow so you don't miss the next case.",
+    " New villain on trial daily. Follow so you don't miss the next case.",
 ]
 
 SS_PROMPTS = [
-    "Did you know this before? 🤯",
-    "What other facts blow your mind? 👇",
+    "Did you know this before? ",
+    "What other facts blow your mind? ",
     "Save this — you'll want to remember it.",
-    "Drop a 🤯 if this changed how you think.",
+    "Drop a  if this changed how you think.",
     "Mind. Officially. Blown.",
     "Tag someone who needs to hear this.",
-    "What's the wildest fact YOU know? Comment 👇",
+    "What's the wildest fact YOU know? Comment ",
     "Hit follow for daily mind-benders.",
     "How did NOBODY teach us this?",
-    "Comment 🧠 if you learned something.",
+    "Comment  if you learned something.",
 ]
 
 

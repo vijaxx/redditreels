@@ -671,7 +671,7 @@ def upload(video_path: Path, title: str, description: str, tags: List[str],
                 pass
             raise RuntimeError("upload completed but no video URL found on page")
 
-        log.info(f"Rumble ✅  {video_url}")
+        log.info(f"Rumble   {video_url}")
 
         # Refresh saved cookies for next run
         try:

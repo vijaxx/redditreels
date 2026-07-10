@@ -1,15 +1,8 @@
 #!/usr/bin/env python3
-"""
-hashtag_rotator.py — prevent hashtag burnout by tracking + rotating overused tags.
-
-When the same hashtag appears in >50% of last 20 videos, it's "burned out" — YT's
-algo may stop ranking it for our channel ("same channel, same tags = no new audience").
-This tool maintains a rotation pool: rest each tag after N uses, freshen with alternatives.
-
-Called from hashtag_miner.py to filter out over-used tags before emitting.
-
-Built 2026-06-03 overnight round 2.
-"""
+"""Rests a hashtag once it's shown up in more than half of the last 20
+videos -- reusing the same tags on the same channel stops bringing in new
+audience, so this keeps a rotation pool and swaps in fresher alternatives.
+hashtag_miner.py calls this to filter its output."""
 import json, pathlib
 from collections import Counter
 from typing import List

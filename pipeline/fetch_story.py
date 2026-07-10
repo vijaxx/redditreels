@@ -26,16 +26,15 @@ SUBS = [
 # Remove image-only subs
 SUBS = [s for s in SUBS if s != "MakeMeSuffer"]
 
-# SIGNATURE SERIES (2026-06-25, task C — "Am I The Villain?"): heavily weight the fetch toward
-# the relationship / family / judgment cluster that already dominates our best content, so the
-# channel reads as ONE identity instead of random AITA. These six are the series core.
+# Weights the fetch heavily toward the relationship/family/judgment cluster that already
+# dominates the channel's best content, so it reads as one identity instead of random AITA.
 #
-# 2026-07-01 data audit (109 runs): added antiwork + NoStupidQuestions + MaliciousCompliance
-# to the series pool. All three have 100% YT/Rumble success AND 100% green ad-safety —
-# the cleanest performers in the pool. They fit the "judge the situation" format, generate
-# conflict/judgment stories, and have zero risk-word hits across combined 9 runs.
-# Previously they were "off-brand" with only 34% chance of getting one slot. Now they're
-# guaranteed participants alongside the relationship cluster.
+# A 109-run audit added antiwork, NoStupidQuestions, and MaliciousCompliance to the pool --
+# all three came back 100% YT/Rumble success and 100% green ad-safety, the cleanest
+# performers around, with zero risk-word hits across 9 combined runs. They fit the
+# "judge the situation" format and generate the same kind of conflict/judgment stories, so
+# they're now guaranteed participants alongside the core relationship cluster rather than a
+# 34%-chance wildcard.
 SERIES_SUBS = [
     # Relationship / moral-judgment core (channel identity)
     "AmItheAsshole", "JustNoMIL", "relationship_advice",
@@ -48,8 +47,8 @@ def series_active_subs(stable, k=6, off_brand_p=0.15):
     """Return up to k subs heavily weighted to SERIES_SUBS, with a small chance of ONE
     off-brand sub for variety. Falls back to plain sampling if no series sub is available
     (e.g. all blacklisted).
-    off_brand_p reduced 0.34→0.15 (2026-07-01): series subs are all high-performers;
-    off-brand adds variety but no proven benefit."""
+    off_brand_p sits at 0.15 rather than higher -- series subs are all high performers,
+    and off-brand adds variety but no proven benefit."""
     series = [s for s in SERIES_SUBS if s in stable]
     other  = [s for s in stable if s not in SERIES_SUBS]
     if not series:
@@ -59,9 +58,9 @@ def series_active_subs(stable, k=6, off_brand_p=0.15):
         picks[-1] = random.choice(other)   # one off-brand sub so the channel isn't 100% monotone
     return picks
 
-# UPGRADE B 2026-06-03: TRENDING-TOPIC HIJACKING — separate "viral now" sub pool.
-# When we hit one of these, use 'hour' time filter so content is < 60 min old =
-# riding the viral wave. ~30% of fires use this pool.
+# A separate "viral now" sub pool: when a fire hits one of these, use the 'hour' time
+# filter so content is under 60 minutes old -- riding the wave while it's still hot.
+# About 30% of fires draw from this pool.
 TRENDING_SUBS = [
     # 2026-06-07 FIX: removed "popular" + "all" — they surfaced regional/non-English/
     # image/meme/tiny posts (e.g. r/PataHaiAajKyaHua, 193-char junk) that rewrote to
@@ -245,10 +244,10 @@ def main():
         except Exception as _ce:
             print(f"[fetch_story] cache unavailable ({_ce}) — live fetch", file=sys.stderr)
 
-    # 2026-06-28 — IDEA POOL FALLBACK (#1): if Reddit cache is empty AND live fetch fails (429,
-    # blocked sub, etc.), try the ContentEngine hook pool that bridge.py keeps fed daily. This
-    # closes the dead-end where Ajitesh's reels-hook ideas had no consumer. Synthesizes a story-
-    # shaped record so the rest of the pipeline (rewrite_story → voice → render) just works.
+    # Fallback: if the Reddit cache is empty and a live fetch fails (429, blocked sub,
+    # etc.), fall back to a hook pool that a separate idea-generation job keeps fed daily.
+    # Synthesizes a story-shaped record so the rest of the pipeline (rewrite_story ->
+    # voice -> render) just works without knowing the source was different.
     pool_path = os.path.expanduser("~/RedditReels/data/idea_pool.jsonl")
     if os.environ.get("RR_USE_IDEA_POOL", "1") != "0" and os.path.exists(pool_path):
         try:
@@ -273,16 +272,16 @@ def main():
                     "source": "idea_pool",
                 }
                 json.dump(pick, open(OUT, "w"), indent=2)
-                print(f"[fetch_story] using IDEA POOL hook (Ajitesh-generated, no Reddit hit)")
+                print(f"[fetch_story] using idea-pool hook (no Reddit hit)")
                 print(f"  hook: {hook[:80]}")
                 return
             print("[fetch_story] idea pool exhausted / all used — live fetch")
         except Exception as _pe:
             print(f"[fetch_story] idea pool unavailable ({_pe}) — live fetch", file=sys.stderr)
 
-    # UPGRADE B 2026-06-03: 30% of fires hijack TRENDING_SUBS with 'hour' time filter
-    # (riding the viral wave while it's hot). 70% use stable SUBS pool.
-    # 2026-06-03 overnight round 2: respect subreddit_winrate blacklist
+    # 30% of fires hijack TRENDING_SUBS with an 'hour' time filter (riding the viral wave
+    # while it's hot); the other 70% use the stable SUBS pool, respecting the blacklist
+    # subreddit_winrate maintains below.
     _blacklist = set()
     try:
         _bl_path = pathlib.Path.home() / "PipelineCleanup" / "subreddit_blacklist.json"
@@ -293,12 +292,12 @@ def main():
                 _blacklist = set(_bd.get("blacklisted_subs", []))
     except Exception: pass
     _stable = [s for s in SUBS if s not in _blacklist]
-    # 2026-06-07: sample a SUBSET of subs per fetch (not all ~14) to cut Reddit RSS
-    # request volume → avoid HTTP 429 rate-limiting. 6 subs × ~15 posts = plenty.
-    # 2026-06-29 task C: weight the live-fetch sweep toward the "Am I The Villain?" series
-    # cluster (AITA/JustNoMIL/relationship_advice/EntitledPeople/confession/TwoX) so cache-miss
-    # fires also read as ONE channel identity. series_active_subs falls back to a plain sample
-    # if no series sub survives the blacklist.
+    # Sample a subset of subs per fetch rather than all ~14 -- cuts Reddit RSS request
+    # volume and avoids HTTP 429 rate-limiting. 6 subs x ~15 posts is plenty. Also weights
+    # the live-fetch sweep toward the "Am I The Villain?" series cluster (AITA/JustNoMIL/
+    # relationship_advice/EntitledPeople/confession/TwoX) so cache-miss fires still read
+    # as one channel identity; falls back to a plain sample if no series sub survives
+    # the blacklist.
     active_subs = TRENDING_SUBS if USE_TRENDING_POOL else series_active_subs(_stable, k=min(6, len(_stable)))
     if _blacklist:
         print(f"  [filter] blacklist active: {_blacklist}")

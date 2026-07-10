@@ -1,15 +1,8 @@
 #!/usr/bin/env python3
-"""
-thumbnail_ab_swap.py — A/B test thumbnails on YT.
-
-After 6h, check view count on each recent video. If a video is underperforming
-(< 5 views in 6h) AND it has alternative frames available, swap to a different
-thumbnail (from a face-detected alt or from frame at 30% / 70% timestamp).
-
-Daily morning_batch step. Conservative: only swaps ONCE per video.
-
-Built 2026-06-03 to improve YT CTR on underperforming early-stage videos.
-"""
+"""Simple thumbnail A/B test: if a video has under 5 views 6 hours after
+upload and an alternate frame is available (face-detected, or just the
+30%/70% timestamp), swap the thumbnail once. Only ever swaps a given video
+one time -- deliberately conservative."""
 import os, sys, json, pathlib, subprocess, tempfile
 from typing import Optional
 from datetime import datetime, timedelta, timezone
@@ -99,13 +92,11 @@ def swap_yt_thumbnail(yt, video_id: str, thumb_path: pathlib.Path) -> bool:
 
 
 def run():
-    # RETIRED 2026-06-29 (task D): this lever ONLY swaps YouTube thumbnails, and YouTube is
-    # ~5% of views AND unmonetizable for this channel (~95% of views come from Facebook Reels,
-    # which doesn't use a swappable thumbnail). So every run spent Claude/compute + a YT OAuth
-    # refresh optimizing the platform that can't pay. Cut from daily ops. We neutralize the TOOL
-    # itself (in-scope) because the caller lives in the external morning_batch.sh; this way the
-    # lever is dead no matter who invokes it. Set RR_ENABLE_THUMB_SWAP=1 to re-enable if ever
-    # wanted (e.g. after YT monetization is unlocked).
+    # Retired: this only swaps YouTube thumbnails, and YouTube is a small slice of views for
+    # this channel and unmonetizable here -- most views come from Facebook Reels, which
+    # doesn't use a swappable thumbnail at all. Every run was spending an LLM call and a YT
+    # OAuth refresh optimizing the platform that can't pay. Disabled by default; set
+    # RR_ENABLE_THUMB_SWAP=1 to bring it back (e.g. once YT monetization is unlocked).
     if os.environ.get("RR_ENABLE_THUMB_SWAP") != "1":
         _log("RETIRED: thumbnail_ab_swap is YouTube-only (~5% of views, unmonetizable) — "
              "no-op. Set RR_ENABLE_THUMB_SWAP=1 to re-enable.")
@@ -152,7 +143,7 @@ def run():
         if not alt:
             _log(f"  {vid} ({v}v) — couldn't extract alt frame, skip"); continue
         if swap_yt_thumbnail(yt, vid, alt):
-            _log(f"  ✓ {vid} ({v}v, {age_h:.1f}h) — swapped thumbnail to t={dur*0.6:.1f}s frame  '{title[:40]}'")
+            _log(f"   {vid} ({v}v, {age_h:.1f}h) — swapped thumbnail to t={dur*0.6:.1f}s frame  '{title[:40]}'")
             seen.add(vid)
             swapped += 1
     _save_seen(seen)

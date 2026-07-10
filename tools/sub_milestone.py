@@ -1,13 +1,7 @@
 #!/usr/bin/env python3
-"""
-sub_milestone.py — notify on subscriber milestones.
-
-Polls YT channel subs hourly. When count crosses a milestone (5, 10, 25, 50,
-100, 250, 500, 1000, 5000, 10000), pushes a Telegram celebration notification
-+ schedules a "thank you" community post draft.
-
-Built 2026-06-03 overnight.
-"""
+"""Polls subscriber count hourly and fires a notification the moment it
+crosses a milestone (5, 10, 25... up to 100k), plus drafts a thank-you
+community post."""
 import json, pathlib
 from datetime import datetime
 
@@ -51,12 +45,12 @@ def run():
         _log(f"  current subs={subs}, last_milestone={last} — no new milestone")
         return
     for m in new_milestones:
-        _log(f"🎉 MILESTONE: crossed {m} subs!")
+        _log(f" MILESTONE: crossed {m} subs!")
         try:
             import sys as _s
             _s.path.insert(0, str(pathlib.Path.home() / "RedditReels/tools"))
             from notify import notify
-            notify(f"🎉 {m} subscribers!",
+            notify(f" {m} subscribers!",
                     f"Channel hit {m} subs. Plan a thank-you community post.")
         except: pass
     state["last_milestone"] = max(new_milestones)

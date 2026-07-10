@@ -117,7 +117,7 @@ def enrich_with_cross_platform_views(stats_list):
                                    get_facebook_views_graph, get_rumble_views,
                                    get_rumble_views_public)
     except Exception as e:
-        print(f"  ⚠ view_scrapers unavailable ({e}) — skipping cross-platform enrichment")
+        print(f"   view_scrapers unavailable ({e}) — skipping cross-platform enrichment")
         for s in stats_list:
             s["total_views"] = s.get("views", 0)
         return stats_list
@@ -139,7 +139,7 @@ def enrich_with_cross_platform_views(stats_list):
                 try:
                     fb_v = get_facebook_views(s["fb_url"], driver=_driver())
                 except Exception as e:
-                    print(f"  ⚠ FB fallback unavailable for {s.get('video_id')}: {e}")
+                    print(f"   FB fallback unavailable for {s.get('video_id')}: {e}")
         if s.get("rumble_url"):
             rum_v = get_rumble_views_public(s["rumble_url"])       # reliable, no Chrome
         if rum_v is None and (s.get("rumble_url") or s.get("title")):
@@ -147,7 +147,7 @@ def enrich_with_cross_platform_views(stats_list):
                 rum_v = get_rumble_views(s.get("rumble_url"), driver=_driver(),
                                          title_hint=s.get("title"))
             except Exception as e:
-                print(f"  ⚠ Rumble fallback unavailable for {s.get('video_id')}: {e}")
+                print(f"   Rumble fallback unavailable for {s.get('video_id')}: {e}")
         s["fb_views"] = fb_v
         s["rumble_views"] = rum_v
         s["total_views"] = yt_v + (fb_v or 0) + (rum_v or 0)
@@ -218,7 +218,7 @@ def main():
 
     INSIGHTS_PATH.parent.mkdir(parents=True, exist_ok=True)
     INSIGHTS_PATH.write_text(json.dumps(insights, indent=2))
-    print(f"✓ insights written → {INSIGHTS_PATH}")
+    print(f" insights written → {INSIGHTS_PATH}")
 
     # Feed the shared org COLLECTIVE MEMORY so every engine (PinForge, AffiliReels,
     # DropEngine) inherits RR's fresh, real-data learnings — not just RR.
@@ -239,7 +239,7 @@ def main():
         d["reels"] = reels
         d["_updated"] = insights.get("analyzed_at", "")[:10]
         _cm.STORE.write_text(json.dumps(d, indent=2, ensure_ascii=False))
-        print("✓ collective memory updated (reels) → all engines inherit")
+        print(" collective memory updated (reels) → all engines inherit")
     except Exception as e:
         print(f"collective memory update skipped: {e}")
 
@@ -259,7 +259,7 @@ def main():
         lines.append("## Directives for next week's rewriter (auto-appended to prompts)")
         for d in insights["rewriter_directives"]: lines.append(f"- {d}")
     REPORT_PATH.write_text("\n".join(lines))
-    print(f"✓ markdown report → {REPORT_PATH}")
+    print(f" markdown report → {REPORT_PATH}")
 
 
 if __name__ == "__main__":

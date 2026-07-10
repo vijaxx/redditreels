@@ -1,23 +1,17 @@
 #!/usr/bin/env python3
-"""
-view_scrapers.py — Cross-platform view-count fetcher.
+"""Cross-platform view counts -- only YouTube has a real API for this.
 
-Built 2026-05-31 to fix the broken loser-detection logic that judged videos by
-YouTube views alone (which caused yesterday's denture-solution video to be flagged
-as a loser at 1 YT view when it had 13 views on FB — would have been worse if it
-had 250 views; the principle stands either way). No public FB/Rumble APIs needed.
-
-API:
     get_views_all_platforms(yt_id=None, fb_url=None, rumble_url=None,
-                             rumble_title_hint=None) -> dict
-        → {"youtube": int|None, "facebook": int|None, "rumble": int|None,
-            "total": int (sum of non-None values)}
+                             rumble_title_hint=None)
+        -> {"youtube": int|None, "facebook": int|None, "rumble": int|None,
+            "total": int}
 
-Scraping strategy per platform:
-  YT  — Data API v3 with existing refresh token (no Chrome)
-  FB  — Navigate to reel URL, click "View Insights", read "Views" label + number
-  RUM — Navigate to /account/content (admin dashboard), text-match title→raw views
-"""
+YouTube goes through the Data API with the existing refresh token. Facebook
+and Rumble don't expose view counts through any usable public API, so those
+go through Chrome instead: open the reel/video, read the number off the page.
+Written after a video with only 1 YouTube view but 13 on Facebook got flagged
+as a loser by YouTube-only logic -- undercounting like that was worse than it
+looked."""
 
 import os, re, json, time, sys, pathlib, urllib.request
 from typing import Optional, Dict

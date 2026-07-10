@@ -1,16 +1,8 @@
 #!/usr/bin/env python3
-"""
-view_velocity.py — Track view velocity per video. Alert on virality.
-
-Runs every hour. For each video uploaded in last 48h, polls YT views and
-calculates views/hour velocity. If velocity exceeds VIRAL_THRESHOLD,
-writes ~/PipelineCleanup/VIRAL_ALERT.md so user (or follow-up automation) can
-react fast — pin a related comment, boost on FB, schedule a Part 2, etc.
-
-History stored in ~/PipelineCleanup/view_history.jsonl (append-only).
-
-Built 2026-06-03 overnight.
-"""
+"""Tracks views/hour for anything uploaded in the last 48 hours, hourly.
+Past a threshold it's flagged as unusually hot in a local alert file, so a
+human -- or a follow-up script -- can react: pin a comment, cross-post, plan
+a part two."""
 import os, sys, json, pathlib
 from datetime import datetime, timedelta, timezone
 
@@ -70,7 +62,7 @@ def _record(vid: str, views: int, age_h: float, vph: float):
 
 def _write_alert(events: list):
     """Write the VIRAL_ALERT.md so user sees it on next dashboard check."""
-    lines = ["# 🔥 VIRAL ALERT 🔥", "",
+    lines = ["#  VIRAL ALERT ", "",
              f"Generated: {datetime.now().isoformat()}",
              "",
              "Videos exceeding viral velocity threshold:",
@@ -115,7 +107,7 @@ def run():
                       "If 100+ views, queue a Part 2.")
             viral.append({"vid": vid, "views": views, "age_h": age_h,
                           "vph": vph, "title": title, "action": action})
-            _log(f"🔥 VIRAL: {vid} ({views}v in {age_h:.0f}h = {vph:.1f}vph)  {title[:50]}")
+            _log(f" VIRAL: {vid} ({views}v in {age_h:.0f}h = {vph:.1f}vph)  {title[:50]}")
         else:
             _log(f"  {vid}  {views}v  {age_h:.0f}h  {vph:.1f}vph  Δ+{delta}")
 
@@ -128,7 +120,7 @@ def run():
             _sn.path.insert(0, str(pathlib.Path.home() / "RedditReels/tools"))
             from notify import notify
             for v in viral:
-                notify(f"🔥 VIRAL: {v['title'][:60]}",
+                notify(f" VIRAL: {v['title'][:60]}",
                         f"{v['views']} views in {v['age_h']:.0f}h ({v['vph']:.1f} vph)\n"
                         f"https://youtube.com/shorts/{v['vid']}")
         except Exception: pass

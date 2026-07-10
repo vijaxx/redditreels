@@ -97,7 +97,7 @@ def find_losers(yt, already):
         from view_scrapers import get_views_all_platforms
         scrape_ok = True
     except Exception as e:
-        print(f"  ⚠ view_scrapers unavailable ({e}) — falling back to YT-only")
+        print(f"   view_scrapers unavailable ({e}) — falling back to YT-only")
         scrape_ok = False
 
     losers = []
@@ -116,7 +116,7 @@ def find_losers(yt, already):
                     print(f"    {e['yt_video_id']}  privacy={pstat} → SKIP (pulled/held, not a loser)")
                     continue
         except Exception as _pe:
-            print(f"    ⚠ privacy check failed for {e['yt_video_id']}: {_pe} — skipping to be safe")
+            print(f"     privacy check failed for {e['yt_video_id']}: {_pe} — skipping to be safe")
             continue
         if scrape_ok:
             try:
@@ -129,7 +129,7 @@ def find_losers(yt, already):
                 total = r["total"]
                 print(f"    {e['yt_video_id']}  YT={r['youtube']} FB={r['facebook']} RUM={r['rumble']}  total={total}")
             except Exception as ex:
-                print(f"    ⚠ scrape failed for {e['yt_video_id']}: {ex} — falling back to YT-only")
+                print(f"     scrape failed for {e['yt_video_id']}: {ex} — falling back to YT-only")
                 stats = yt.videos().list(part="statistics", id=e["yt_video_id"]).execute()
                 total = int(stats["items"][0]["statistics"].get("viewCount", 0)) if stats.get("items") else 0
                 r = {"youtube": total, "facebook": None, "rumble": None, "total": total}
@@ -138,7 +138,7 @@ def find_losers(yt, already):
             # judge it on YT-only views (FB is the primary view driver; YT=2/FB=228 is
             # common and would be wrongly rerendered if FB data is missing).
             if e.get("fb_posted") or e.get("facebook_url"):
-                print(f"    {e['yt_video_id']}  ⚠ scraper down, has FB URL — SKIP (can't judge without FB)")
+                print(f"    {e['yt_video_id']}   scraper down, has FB URL — SKIP (can't judge without FB)")
                 continue
             stats = yt.videos().list(part="statistics", id=e["yt_video_id"]).execute()
             total = int(stats["items"][0]["statistics"].get("viewCount", 0)) if stats.get("items") else 0

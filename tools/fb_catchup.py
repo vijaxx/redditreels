@@ -8,7 +8,7 @@ caption matches what went to YT/Rumble. Usage: fb_catchup.py <TS> [<TS> ...]
 import sys, json, time
 from pathlib import Path
 
-BASE = Path("/Users/vijaxx/RedditReels")
+BASE = Path.home() / "RedditReels"
 sys.path.insert(0, str(BASE))
 import redditreels as rr
 
@@ -31,7 +31,7 @@ for ts in sys.argv[1:]:
     print(f"\n[{ts}] Posting to FB: {title!r}  ({reel.name})", flush=True)
     try:
         url = rr.upload_facebook(reel, title, fb_description, tags, cfg)
-        print(f"[{ts}] FB ✅ {url}", flush=True)
+        print(f"[{ts}] FB  {url}", flush=True)
     except Exception as e:
-        print(f"[{ts}] FB ❌ {e}", flush=True)
+        print(f"[{ts}] FB  {e}", flush=True)
     time.sleep(5)

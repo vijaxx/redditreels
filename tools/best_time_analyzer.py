@@ -1,15 +1,8 @@
 #!/usr/bin/env python3
-"""
-best_time_analyzer.py — find which fire times actually generate the most views.
-
-We fire at 17:30/18:30/19:30/20:30 IST. Are all 4 equally good? Probably not.
-This walks performance_scores + uploads to compute avg views/score by fire hour
-across all-time data. Outputs recommendation: "shift 18:30 → 19:00" etc.
-
-Run weekly.
-
-Built 2026-06-03 overnight.
-"""
+"""Checks whether the four fire times (17:30/18:30/19:30/20:30 IST) are
+actually equally good, by averaging views/score per fire hour across
+all-time data. Run weekly; prints a shift recommendation if one slot is
+consistently underperforming."""
 import json, pathlib
 from collections import defaultdict
 from datetime import datetime
@@ -70,10 +63,10 @@ def run():
         lines.append(f"**Worst:** {worst[0]:02d}:30 (avg score {worst[2]:.1f})")
         if best[2] > worst[2] * 1.5:
             lines.append("")
-            lines.append(f"💡 RECOMMENDATION: shift the {worst[0]:02d}:30 slot to closer to {best[0]:02d}:30")
+            lines.append(f" RECOMMENDATION: shift the {worst[0]:02d}:30 slot to closer to {best[0]:02d}:30")
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text("\n".join(lines))
-    print(f"  ✓ {OUT}")
+    print(f"   {OUT}")
     for hh, n, s, v in rows:
         print(f"  {hh:02d}:30  n={n}  score={s:.1f}  views={v:.1f}")
 

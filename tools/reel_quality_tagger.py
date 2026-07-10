@@ -1,18 +1,8 @@
 #!/usr/bin/env python3
-"""
-reel_quality_tagger.py — score and tag every rendered reel with quality metadata.
-
-Output dict added to uploads.jsonl per video:
-  - ad_safe_tier: "green" | "yellow" | "red" (based on risk word scan)
-  - family_friendly: bool (passes G/PG rating heuristic)
-  - hook_strength: 0-100 (first 8 words of narration)
-  - title_clickbait_score: 0-100 (Claude judge)
-  - production_score: composite 0-100
-
-Called from redditreels.py at end of run().
-
-Built 2026-06-03 overnight round 2.
-"""
+"""Tags every rendered reel with quality metadata before it ships: an
+ad-safety tier from a risk-word scan, a family-friendly heuristic, hook
+strength on the opening words, a clickbait score on the title, and a
+composite production score. Called at the end of every run."""
 import json, pathlib, re
 from typing import Dict
 

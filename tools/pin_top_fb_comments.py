@@ -1,13 +1,7 @@
 #!/usr/bin/env python3
-"""
-pin_top_fb_comments.py — Walk recent FB reels, find the highest-liked organic
-comment (not from our own Page), pin it. Daily morning_batch step.
-
-Pinning a top comment from a viewer signals "this is the convo" to others,
-increases engagement signal, and rewards the viewer (return-visit driver).
-
-Built 2026-06-03 as part of cross-platform engagement parity.
-"""
+"""Finds the highest-liked comment from someone other than the Page itself
+on each recent FB reel and pins it -- surfaces "this is the conversation" to
+other viewers and rewards whoever left it."""
 import os, sys, time, json, pathlib, signal, urllib.request
 from datetime import datetime
 from typing import List, Dict, Optional
@@ -152,7 +146,7 @@ def run(max_reels: int = 10, execute: bool = False, hard_timeout_s: int = 120) -
                 seen.add(url)
                 pinned_count += 1
     except _TimeoutErr:
-        _log(f"  ⚠ hit hard {hard_timeout_s}s cap")
+        _log(f"   hit hard {hard_timeout_s}s cap")
     finally:
         signal.alarm(0)
         if d:

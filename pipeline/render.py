@@ -290,13 +290,13 @@ def build_engagement_overlays(out_dir, narration_dur):
     # repeated frame patterns and may de-prioritize).
     import random as _r
     FIRST_FRAME_TEMPLATES = [
-        "⚠️ WAIT FOR IT...",
-        "🔴 DO NOT scroll",
-        "👀 You won't believe...",
-        "❗ Stay till the END",
-        "🚫 Don't skip this",
-        "🤯 This actually happened",
-        "🛑 Pause and read",
+        " WAIT FOR IT...",
+        " DO NOT scroll",
+        " You won't believe...",
+        " Stay till the END",
+        " Don't skip this",
+        " This actually happened",
+        " Pause and read",
     ]
     first_frame = _r.choice(FIRST_FRAME_TEMPLATES)
     spec = [
@@ -307,7 +307,7 @@ def build_engagement_overlays(out_dir, narration_dur):
         ("↑ FOLLOW for part 2", "top",
          narration_dur * 0.85, narration_dur * 0.85 + 3.0),
         # Massive end-card follow CTA (last 1.8s)
-        ("👇 FOLLOW for PART 2", "center",
+        (" FOLLOW for PART 2", "center",
          max(0.0, narration_dur - 1.8), narration_dur + 0.3),
     ]
     base_font = load_font(FONT_PATHS, 72)

@@ -1,18 +1,7 @@
 #!/usr/bin/env python3
-"""
-yt_monetization_check.py — verify monetization status of recent YT uploads.
-
-For each video, calls videos.list(part=monetizationDetails) to confirm:
-  - ad_enabled: bool
-  - eligible_for_ads: bool
-  - claimed: bool (Content ID claim — splits or zero ad revenue)
-
-Updates uploads.jsonl entries with yt_monetization_real + checked_at.
-
-Runs weekly. Requires broader-scope OAuth (already granted).
-
-Built 2026-06-03 overnight round 2.
-"""
+"""Confirms each recent upload's actual monetization status via the API
+(ad_enabled, eligible_for_ads, any Content ID claim) rather than assuming it
+still matches what the dashboard showed at upload time. Runs weekly."""
 import os, sys, json, pathlib
 from datetime import datetime
 
@@ -71,7 +60,7 @@ def run():
         e["yt_monetization_checked_at"] = datetime.now().isoformat()
     # Rewrite uploads.jsonl
     UPLOADS.write_text("\n".join(json.dumps(e) for e in entries) + "\n")
-    _log(f"  ✓ checked {len(info)} videos")
+    _log(f"   checked {len(info)} videos")
 
 
 if __name__ == "__main__": run()

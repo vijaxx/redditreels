@@ -1,17 +1,9 @@
 #!/usr/bin/env python3
-"""
-niche_first_comment.py — be the first commenter on viral videos in our niche.
-
-Strategy: every morning, find the 5 most-watched Shorts in the last 6 hours
-on these niche search terms ("reddit story", "aita", "tifu", "antiwork story").
-For each, post a thoughtful first/early comment from our @framewise_cinema
-account. Goal: instant exposure to a larger audience that's actively engaged.
-
-Cap: 5 comments per run (no spam). Skip videos with > 50 comments already (we
-won't be visible). Skip our own channel's videos.
-
-Built 2026-06-03 overnight. Wired to morning_batch as step 4g.
-"""
+"""Tries to be an early commenter on whatever's trending in the same niche.
+Each morning, finds the 5 most-watched Shorts from the last 6 hours matching a
+few search terms and posts an early comment from the channel account -- skips
+anything with 50+ comments already (won't stand out there) and anything from
+the channel itself. Capped at 5 comments a run."""
 import os, sys, json, pathlib, random
 from datetime import datetime, timezone, timedelta
 
@@ -130,7 +122,7 @@ def run(execute: bool = False):
     for c in enriched[:MAX_PER_RUN]:
         comment = _gen_comment(c["title"], cfg.get("anthropic_api_key", ""))
         if not comment:
-            _log(f"  ✗ no comment generated for {c['video_id']}"); continue
+            _log(f"   no comment generated for {c['video_id']}"); continue
         _log(f"  {'POST' if execute else 'WOULD-POST'} v={c['views']} cmts={c['comments']}  "
              f"→ {c['title'][:50]}  |  comment: {comment[:80]}")
         if execute:

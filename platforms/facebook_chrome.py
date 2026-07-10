@@ -236,7 +236,7 @@ def _fb_try_add_trending_music(d, log, cdp_click):
     else:
         log.info("FB: no explicit apply button — music may be auto-applied on track click")
 
-    log.info("FB: ✓ trending music applied (best-effort)")
+    log.info("FB:  trending music applied (best-effort)")
     return True
 
 
@@ -738,7 +738,7 @@ def upload(video_path: Path, title: str, description: str, tags: List[str], cfg:
 
     new_id = sorted(new_ids)[0]
     reel_url = f"https://www.facebook.com/reel/{new_id}/"
-    log.info(f"FB ✅  {reel_url}  (id={new_id})")
+    log.info(f"FB   {reel_url}  (id={new_id})")
     return reel_url
 
 

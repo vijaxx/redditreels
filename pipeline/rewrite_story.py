@@ -11,10 +11,10 @@ WORK.mkdir(parents=True, exist_ok=True)
 CREDS = json.load(open(os.path.expanduser("~/RedditReels/config/credentials.json")))
 client = Anthropic(api_key=CREDS.get("anthropic_api_key", ""))
 
-# SIGNATURE SERIES (2026-06-25, task C — "Am I The Villain?"): give the channel ONE identity
-# instead of random AITA. Config-driven but DEFAULTS to the approved live values so it ships
-# even without config keys (charter forbids editing credentials.json). Set series_enabled:false
-# in creds to disable, or override series_spoken_hook / series_title_prefix to retune.
+# Signature series ("Am I The Villain?"): gives the channel one consistent identity
+# instead of random AITA posts. Defaults on so it works without touching creds; set
+# series_enabled:false in creds to disable, or override series_spoken_hook /
+# series_title_prefix to retune the hook.
 SERIES_ENABLED      = bool(CREDS.get("series_enabled", True))
 SERIES_SPOKEN_HOOK  = (CREDS.get("series_spoken_hook")  or "You decide — am I the villain?").strip()
 SERIES_TITLE_PREFIX = CREDS.get("series_title_prefix", "Villain? ")
@@ -23,19 +23,17 @@ IN  = pathlib.Path((WORK / "story.json"))
 OUT = pathlib.Path((WORK / "script.json"))
 
 import random as _random
-# DURATION VARIANT (2026-06-25, task A — chase FB's +63%-views-for-<30s lever):
-# Bias the shared render toward the SHORT variant (0.6, was 0.5) so MORE fires land under
-# 30s, and target ~24s (was 21) so the "rapid" reel sits squarely in FB's 22-28s sweet spot.
-# This is the SIMPLE option Vijaxx approved: NO upload/cadence change and NO fire-skipping —
-# every fire still posts to FB exactly as before; only the LENGTH distribution shifts shorter.
-# RR_DURATION_S env var forces a specific length for a given fire.
+# Facebook's Reels algorithm noticeably favors anything under 30s, so most fires are
+# biased toward a short variant (60% of the time) targeting ~24-26s rather than the
+# full 45s narration. Nothing else changes -- every fire still posts to FB as before,
+# just the length distribution shifts shorter. RR_DURATION_S forces a specific length.
 _rapid = _random.random() < 0.6
 TARGET_DURATION_S = int(os.environ.get("RR_DURATION_S") or (26 if _rapid else 45))
 _is_short = TARGET_DURATION_S <= 30
-# 2026-06-30 ROOT-CAUSE FIX: the old (48,60) budget rendered to ~15-18s at the measured TTS
-# rate (avg 2.88, up to 3.47 words/sec), so ~8% of fires produced <20s reels that the
-# pre-upload sanity gate ABORTED — a wasted fire (no post anywhere). 72 words clears 20s even
-# at the fastest rate (72/3.47≈20.7s) and stays <30s at the average (≈25s) for FB's lever.
+# The word budget matters more than it looks: at the measured TTS rate (2.88-3.47
+# words/sec) a too-low budget rendered some short fires down to 15-18s, which the
+# pre-upload sanity check then rejected outright -- a wasted run with nothing posted
+# anywhere. 72 words clears 20s even at the fastest rate and stays under 30s on average.
 WORD_BUDGET = (72, 82) if _is_short else (95, 140)
 DURATION_VARIANT = "rapid21" if _is_short else "full45"   # label kept for uploads.jsonl continuity
 # Anti-stub floor, used by BOTH the expand-retry below AND redditreels' MIN-LENGTH GATE:
@@ -151,7 +149,7 @@ FORCED_TITLE_PATTERN = _random.choice(_TITLE_PATTERNS)
 SYSTEM += (f"\n\nMANDATORY THIS FIRE: use VIRAL TITLE PATTERN {FORCED_TITLE_PATTERN} for the "
            f"title (do NOT default to another pattern) and set \"title_pattern\":\"{FORCED_TITLE_PATTERN}\".")
 
-# SERIES FRAMING (2026-06-25, task C): orient the title/hook around the moral-judgment tension.
+# Orients the title/hook around the moral-judgment tension the series is built on.
 if SERIES_ENABLED:
     SYSTEM += ("\n\nSERIES CONTEXT: This is the \"Am I The Villain?\" series — relationship / family / "
                "workplace stories where the narrator might be the bad guy. Frame the TITLE and HOOK "
@@ -200,14 +198,14 @@ def scrub_text(text: str) -> tuple[str, list]:
 
 
 def judge_faithful(title: str, narration: str) -> tuple:
-    """Semantic title<->story FAITHFULNESS judge (2026-06-25, task B). Returns
-    (faithful: bool|None, reason: str). FREE — routes through the llm shim to Groq
-    llama-3.3-70b (no paid call). LOG-ONLY for now (observe a week); it NEVER gates or
-    re-prompts, and any failure returns (None, ...) so a fire is never broken by it.
+    """Semantic title<->story faithfulness judge. Returns (faithful: bool|None,
+    reason: str), routed through the llm shim to Groq's free tier. Log-only --
+    it never gates or re-prompts, and any failure returns (None, ...) so a fire
+    is never broken by it.
 
-    2026-06-30: observation week long past; this 4th Groq call per fire pushes a single
-    rewrite over Groq's free per-minute TOKEN budget → 429 under load. Default OFF
-    (set RR_JUDGE=1 to re-enable) so every fire is ~25% lighter on Groq."""
+    Off by default (set RR_JUDGE=1 to enable): this is a 4th Groq call per
+    fire, and it was pushing single rewrites over Groq's free per-minute token
+    budget under load."""
     if os.environ.get("RR_JUDGE", "0") != "1":
         return None, "judge disabled (saves Groq quota)"
     try:

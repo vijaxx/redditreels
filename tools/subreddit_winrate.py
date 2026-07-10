@@ -1,16 +1,7 @@
 #!/usr/bin/env python3
-"""
-subreddit_winrate.py — track per-subreddit performance.
-
-For each subreddit we've pulled stories from, compute avg performance score
-over last 14 days. Subs averaging < threshold get auto-removed from the SUBS
-pool (writes to ~/PipelineCleanup/subreddit_blacklist.json which fetch_story
-checks).
-
-Runs weekly.
-
-Built 2026-06-03 overnight round 2.
-"""
+"""Tracks average performance score per subreddit over the last 14 days;
+anything averaging below the threshold gets written to a blacklist that
+fetch_story checks before picking a source. Runs weekly."""
 import json, pathlib
 from collections import defaultdict
 from datetime import datetime, timedelta
@@ -65,7 +56,7 @@ def run():
     lines = [f"# Subreddit win-rate — last {LOOKBACK_DAYS} days", "",
              "| Sub | n videos | avg score | status |", "|---|---|---|---|"]
     for sub, n, avg in sorted(rows, key=lambda r: -r[2]):
-        st = "🔴 blacklist" if sub in blacklist else "✓ keep"
+        st = " blacklist" if sub in blacklist else " keep"
         lines.append(f"| r/{sub} | {n} | {avg:.1f} | {st} |")
     REPORT.write_text("\n".join(lines))
     # Write blacklist
@@ -74,7 +65,7 @@ def run():
         "expires": (datetime.now() + timedelta(days=7)).isoformat(),
         "blacklisted_subs": blacklist,
     }, indent=2))
-    print(f"✓ report: {REPORT}")
+    print(f" report: {REPORT}")
     print(f"  blacklisted: {blacklist or 'none'}")
 
 

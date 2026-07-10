@@ -1,15 +1,9 @@
 #!/usr/bin/env python3
-"""
-auto_disable_on_streak.py — emergency brake.
+"""Kill switch: after 3 consecutive failed fires (no successful upload from
+any of them), unloads the launchd job and sends an alert instead of continuing
+to burn quota or ship broken videos.
 
-If 3 consecutive RR fires fail (no successful upload), unload the launchd job +
-push Telegram alert. Prevents continued failure from creating dead videos /
-burning quota / damaging channel scores.
-
-To re-enable: `launchctl load ~/Library/LaunchAgents/com.redditreels.pipeline.plist`
-
-Built 2026-06-03 overnight round 2.
-"""
+Re-enable with `launchctl load ~/Library/LaunchAgents/com.redditreels.pipeline.plist`."""
 import json, pathlib, subprocess
 from datetime import datetime
 
@@ -56,25 +50,25 @@ def run():
         if ALERT.exists(): ALERT.unlink()
         return
     # FAIL: unload + alert
-    _log(f"⚠️ {CONSECUTIVE_FAILURES_THRESHOLD} consecutive failures — unloading RR launchd")
+    _log(f" {CONSECUTIVE_FAILURES_THRESHOLD} consecutive failures — unloading RR launchd")
     try:
         subprocess.run(["launchctl", "unload",
                          str(pathlib.Path.home() / "Library/LaunchAgents/com.redditreels.pipeline.plist")],
                         capture_output=True)
-        _log("  ✓ launchd unloaded")
+        _log("   launchd unloaded")
     except Exception as e:
-        _log(f"  ✗ unload failed: {e}")
+        _log(f"   unload failed: {e}")
     body = (f"RR fires failed {CONSECUTIVE_FAILURES_THRESHOLD} times in a row.\n"
             f"Pipeline launchd has been UNLOADED to prevent further damage.\n\n"
             f"Recent fires:\n" + "\n".join(f"  {ts}: {s}" for ts, s in fires))
     ALERT.parent.mkdir(parents=True, exist_ok=True)
-    ALERT.write_text(f"# 🛑 PIPELINE DISABLED ({datetime.now()})\n\n{body}\n\n"
+    ALERT.write_text(f"#  PIPELINE DISABLED ({datetime.now()})\n\n{body}\n\n"
                      f"To re-enable: `launchctl load ~/Library/LaunchAgents/com.redditreels.pipeline.plist`\n")
     try:
         import sys
         sys.path.insert(0, str(pathlib.Path.home() / "RedditReels/tools"))
         from notify import notify
-        notify("🛑 RR PIPELINE DISABLED", body)
+        notify(" RR PIPELINE DISABLED", body)
     except Exception as e:
         _log(f"  notify failed: {e}")
 

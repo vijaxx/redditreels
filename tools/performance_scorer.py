@@ -1,20 +1,9 @@
 #!/usr/bin/env python3
-"""
-performance_scorer.py — score each video 0-100 based on cross-platform performance.
-
-Score weights:
-  - Total cross-platform views (0-40 pts)
-  - Engagement rate (likes + comments / views) (0-20)
-  - YT subscribers gained from this video (0-15)
-  - Retention proxy (FB '3-second views' / total reach) (0-15)
-  - Velocity (vph for the first 24h) (0-10)
-
-Outputs ~/PipelineCleanup/performance_scores.jsonl (append every run) so trends
-can be tracked over time. The top 10% become inputs to weekly_learn — Claude
-sees what's actually working.
-
-Built 2026-06-03 overnight.
-"""
+"""Scores every video 0-100 from cross-platform performance: total views
+across platforms (40pts), engagement rate (20), subscribers gained (15), a
+retention proxy from Facebook's 3-second-view rate (15), and view velocity in
+the first 24h (10). Logged every run so trends are trackable over time, and
+the top decile feeds into weekly_learn."""
 import json, pathlib, sys
 from datetime import datetime, timezone
 

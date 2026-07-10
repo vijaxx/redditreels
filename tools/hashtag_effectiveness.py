@@ -52,7 +52,7 @@ def run():
         lines.append(f"| #{t} | {avg:.1f} | {n} |")
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text("\n".join(lines))
-    print(f"  ✓ {OUT}")
+    print(f"   {OUT}")
     for t, avg, n in ranking[:5]:
         print(f"  TOP: #{t} avg={avg:.1f} (n={n})")
 

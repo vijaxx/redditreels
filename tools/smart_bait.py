@@ -1,18 +1,7 @@
 #!/usr/bin/env python3
-"""
-smart_bait.py — generate context-aware engagement-bait comments per video.
-
-Current fb_engagement.ENGAGEMENT_BAITS picks from 7 generic strings ("Drop a 🔥"
-etc). Generic bait gets generic engagement. CONTEXT-AWARE bait gets specific
-replies. Example:
-  Generic:  "Drop a 🔥 if this hit you"
-  Smart:    "What would YOU have said if YOUR boss did this? 👇"
-
-Claude writes 3 bait variants per video based on the actual story. Picks the
-one most likely to trigger comment + reply chains.
-
-Built 2026-06-03 overnight.
-"""
+"""Generic engagement-bait comments get generic engagement. This asks Claude
+for a few bait variants tailored to the actual story in a given video, then
+picks whichever seems likeliest to start a reply chain."""
 import json, pathlib
 from typing import Optional
 
@@ -22,7 +11,7 @@ def generate_bait(title: str, hook: str, narration: str, api_key: str) -> str:
     try:
         import sys as _lsys, pathlib as _lpath; _lsys.path.insert(0, str(_lpath.Path(__file__).resolve().parents[1])); from llm import Anthropic
         client = Anthropic(api_key=api_key)
-        prompt = f"""Write ONE Facebook comment to pin under this "Am I The Villain?" Reddit-story Short. The reel is a moral-judgment ritual: it OPENS with "You decide — am I the villain?" and the caption signs off "⚖️ Verdict in the comments — you judge." Your pinned comment's job: COMPLETE that ritual and trigger MAXIMUM reply chain (viewers casting verdicts + arguing with each other, not just replying to us).
+        prompt = f"""Write ONE Facebook comment to pin under this "Am I The Villain?" Reddit-story Short. The reel is a moral-judgment ritual: it OPENS with "You decide — am I the villain?" and the caption signs off " Verdict in the comments — you judge." Your pinned comment's job: COMPLETE that ritual and trigger MAXIMUM reply chain (viewers casting verdicts + arguing with each other, not just replying to us).
 
 VIDEO TITLE: {title}
 HOOK: {hook}
@@ -35,10 +24,10 @@ Write a comment that:
 
 RULES:
 - 8-22 words (short enough to read, long enough to specify)
-- ONE emoji max (⚖️ / 👇 / 💬 fit the verdict theme)
-- MUST end with a clear verdict CTA — e.g. "drop your verdict 👇" / "villain or not? 💬"
+- ONE emoji max ( /  /  fit the verdict theme)
+- MUST end with a clear verdict CTA — e.g. "drop your verdict " / "villain or not? "
 - Anchor it to a SPECIFIC detail from THIS story (not generic)
-- DO NOT use generic phrases like "Drop a 🔥", "Tag someone", "Save this"
+- DO NOT use generic phrases like "Drop a ", "Tag someone", "Save this"
 
 OUTPUT: just the bait text, nothing else. No quotes, no preamble."""
         msg = client.messages.create(
@@ -49,10 +38,10 @@ OUTPUT: just the bait text, nothing else. No quotes, no preamble."""
         # Strip any leading "Bait:" or similar
         if text.lower().startswith(("bait:", "comment:", "post:")):
             text = text.split(":", 1)[1].strip()
-        return text or "⚖️ Villain or not? Drop your verdict 👇"
+        return text or " Villain or not? Drop your verdict "
     except Exception as e:
         print(f"  [smart_bait] fallback: {e}")
-        return "⚖️ Villain or not? Drop your verdict 👇"
+        return " Villain or not? Drop your verdict "
 
 
 if __name__ == "__main__":

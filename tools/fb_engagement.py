@@ -1,20 +1,13 @@
 #!/usr/bin/env python3
-"""
-fb_engagement.py — Facebook Page engagement automation via Chrome :9223.
+"""Facebook engagement automation via Chrome on :9223.
 
-Two capabilities:
-  1. post_engagement_bait(reel_url) — drop a Page comment on a fresh reel to seed
-     engagement ("Drop a 🔥 if this hit you" / "Tag someone who needs this today")
-     and pin it. Called immediately after FB upload completes.
-  2. auto_reply_to_recent(max_reels=10, max_per_reel=5) — walk recent reels, read
-     unanswered comments, AI-reply via Claude using the same SYSTEM_PROMPT as the
-     YT version. Inert when there are no comments (which is the current state of
-     the channel) but ready to fire as engagement grows.
-
-Built 2026-05-31 as part of cross-platform engagement parity. NOTE: Rumble Shorts
-do not support comments (platform limitation — auto-redirects to /shorts viewer
-with no comments UI), so the equivalent for Rumble is impossible.
-"""
+Two things: seeds engagement on a fresh reel with a Page comment right after
+it posts (and pins it), and separately walks recent reels replying to
+unanswered comments with Claude using the same prompt as the YouTube version.
+The reply path is mostly idle for now since there isn't much comment volume
+yet, but it's ready as the channel grows. Rumble Shorts don't support comments
+at all (auto-redirects to a viewer with no comment UI), so there's no
+equivalent there."""
 
 import os, json, time, sys, re, pathlib, urllib.request
 from datetime import datetime
@@ -27,18 +20,18 @@ SEEN = BASE / "PipelineCleanup" / "fb_auto_reply_seen.json"
 DEBUG_PORT = 9223
 
 # 2026-07-01 — "Am I The Villain?" series alignment: the spoken hook opens
-# "You decide — am I the villain?" and the caption signs off "⚖️ Verdict in the
+# "You decide — am I the villain?" and the caption signs off " Verdict in the
 # comments — you judge." These fallback baits (used when smart_bait's Claude call
 # is unavailable) now COMPLETE that same verdict ritual instead of generic
-# "Drop a 🔥" — one recognizable, subscribable format across hook/caption/comment.
+# "Drop a " — one recognizable, subscribable format across hook/caption/comment.
 ENGAGEMENT_BAITS = [
-    "⚖️ Your verdict: villain or not? Drop it 👇",
-    "Villain or totally justified? Comment your verdict 👇",
-    "You be the judge — was OP the villain here? 💬",
-    "🔴 Villain / 🟢 not the villain — cast your verdict 👇",
-    "Am I the villain? YOU decide — verdict below ⚖️",
-    "Jury's out 👇 villain or justified? I read every verdict.",
-    "Guilty or innocent? Drop your one-word verdict 💬",
+    " Your verdict: villain or not? Drop it ",
+    "Villain or totally justified? Comment your verdict ",
+    "You be the judge — was OP the villain here? ",
+    " Villain /  not the villain — cast your verdict ",
+    "Am I the villain? YOU decide — verdict below ",
+    "Jury's out  villain or justified? I read every verdict.",
+    "Guilty or innocent? Drop your one-word verdict ",
 ]
 
 SYSTEM_PROMPT_REPLY = """You reply to Facebook Page comments AS THE CREATOR of a Reddit-storytime / cinematic-quote / curiosity-facts channel called FrameWise Cinema (when motivational) / RedditReels (when storytime).
@@ -47,7 +40,7 @@ REPLY RULES:
 - 1-2 short sentences. Casual, friendly, warm.
 - ALWAYS end with a question OR invitation to engage further.
 - If commenter shares similar experience → ask a follow-up.
-- If commenter expresses emotion (😢 😡 💀) → mirror briefly + ask what triggered it.
+- If commenter expresses emotion (  ) → mirror briefly + ask what triggered it.
 - If commenter asks a question → answer + ask one back.
 - If hostile/negative → respond gracefully, redirect to a question.
 - NEVER use: orgasm, sex, fuck, shit, damn, hell, ass, kill, suicide, murder, porn.
@@ -147,7 +140,7 @@ def post_engagement_bait(reel_url: str, pin: bool = True, hard_timeout_s: int = 
         try:
             d.get(reel_url)
         except Exception as e:
-            _log(f"  ⚠ page load timeout on {reel_url}: {e}")
+            _log(f"   page load timeout on {reel_url}: {e}")
             return False
         time.sleep(4)  # let FB hydrate (was 6 — trim 2s)
         # Find the "Comment as FrameWise Cinema" contenteditable
@@ -164,7 +157,7 @@ def post_engagement_bait(reel_url: str, pin: bool = True, hard_timeout_s: int = 
         return false;
         """)
         if not ok:
-            _log(f"  ⚠ no comment input found on {reel_url}")
+            _log(f"   no comment input found on {reel_url}")
             return False
         # Type via clipboard paste (more reliable than send_keys for FB's React inputs)
         import subprocess
@@ -176,7 +169,7 @@ def post_engagement_bait(reel_url: str, pin: bool = True, hard_timeout_s: int = 
         # Press Enter to submit
         ActionChains(d).send_keys(Keys.RETURN).perform()
         time.sleep(4)
-        _log(f"  ✓ posted bait: '{bait}' on {reel_url}")
+        _log(f"   posted bait: '{bait}' on {reel_url}")
         # Pin: find our just-posted comment, open 3-dot menu, click Pin
         if pin:
             time.sleep(2)
@@ -209,13 +202,13 @@ def post_engagement_bait(reel_url: str, pin: bool = True, hard_timeout_s: int = 
                 return false;
                 """)
                 time.sleep(2)
-                _log(f"  ✓ pinned bait comment")
+                _log(f"   pinned bait comment")
         return True
     except _BaitTimeout as e:
-        _log(f"  ⚠ post_engagement_bait HARD-TIMEOUT after {hard_timeout_s}s — bait may or may not have landed, parent pipeline unblocked")
+        _log(f"   post_engagement_bait HARD-TIMEOUT after {hard_timeout_s}s — bait may or may not have landed, parent pipeline unblocked")
         return False
     except Exception as e:
-        _log(f"  ✗ post_engagement_bait failed: {e}")
+        _log(f"   post_engagement_bait failed: {e}")
         return False
     finally:
         signal.alarm(0)  # cancel alarm no matter what

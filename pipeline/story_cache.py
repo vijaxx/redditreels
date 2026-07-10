@@ -45,11 +45,11 @@ def fill(target=25):
     used = _used_urls()
     pool = load()
     have = {s["url"] for s in pool}
-    # SERIES-WEIGHTED FILL (2026-06-29, task C — "Am I The Villain?"): the 4 daily fires consume
-    # from THIS cache, so the cache is what actually decides the channel's identity. Sweep the
-    # series cluster FIRST (shuffled), then the off-brand subs as fallback — fill() stops once it
-    # hits `target`, so the pool ends up series-dominated (with off-brand only if series subs are
-    # blacklisted or run dry). This is what makes the series narrowing LIVE, not just cosmetic.
+    # The 4 daily fires consume from this cache, so the cache is what actually decides the
+    # channel's identity. Sweep the "Am I The Villain?" series cluster first (shuffled), then
+    # the off-brand subs as fallback -- fill() stops once it hits `target`, so the pool ends up
+    # series-dominated, with off-brand subs only kicking in if the series ones are blacklisted
+    # or run dry. This is what makes the series narrowing actually live, not just cosmetic.
     series = [s for s in fs.SERIES_SUBS if s in fs.SUBS]
     other  = [s for s in fs.SUBS if s not in fs.SERIES_SUBS]
     random.shuffle(series); random.shuffle(other)

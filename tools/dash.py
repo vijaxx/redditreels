@@ -97,11 +97,11 @@ def main():
     print(f"\033[1;36m╔══════ RR Dashboard — {datetime.now():%Y-%m-%d %a %H:%M:%S} ══════╗\033[0m")
 
     hdr("Health")
-    print(f"  Chrome :9223   : {'✓' if chrome_ok() else '✗'}")
-    print(f"  Launchd jobs   : {'✓' if cron_ok() else '✗'}")
+    print(f"  Chrome :9223   : {'ok' if chrome_ok() else 'down'}")
+    print(f"  Launchd jobs   : {'ok' if cron_ok() else 'missing'}")
     print(f"  Disk free      : {disk_free()}")
-    if viral_alert_active(): print("  🔥 VIRAL ALERT — read ~/PipelineCleanup/VIRAL_ALERT.md")
-    if failure_streak_active(): print("  ⚠️  FAILURE STREAK — read ~/PipelineCleanup/ALERT.md")
+    if viral_alert_active(): print("  VIRAL ALERT — read ~/PipelineCleanup/VIRAL_ALERT.md")
+    if failure_streak_active(): print("  FAILURE STREAK — read ~/PipelineCleanup/ALERT.md")
 
     hdr("Next fires")
     for delta_min, t, name in time_to_next_fire()[:4]:
@@ -111,7 +111,7 @@ def main():
     hdr("YT channel totals")
     s = yt_channel_stats()
     if "error" in s:
-        print(f"  ✗ {s['error']}")
+        print(f"  {s['error']}")
     else:
         print(f"  Subscribers : {s['subs']:>6}")
         print(f"  Lifetime views : {s['views']:>4}")
@@ -123,9 +123,9 @@ def main():
         for line in lines:
             try:
                 d = json.loads(line)
-                yt_ok = "✓" if d.get("yt_video_id") else "✗"
-                fb_ok = "✓" if d.get("fb_posted") else "✗"
-                ru_ok = "✓" if d.get("rumble_url") else "✗"
+                yt_ok = "y" if d.get("yt_video_id") else "-"
+                fb_ok = "y" if d.get("fb_posted") else "-"
+                ru_ok = "y" if d.get("rumble_url") else "-"
                 bait = d.get("results", {}).get("fb_bait_pinned", "-")
                 print(f"  {d.get('ts','?')}  YT={yt_ok} FB={fb_ok} RUM={ru_ok}  bait={bait}  {(d.get('title') or '')[:48]}")
             except: pass

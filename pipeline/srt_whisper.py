@@ -1,14 +1,7 @@
 #!/usr/bin/env python3
-"""
-srt_whisper.py — REAL word-sync SRT via faster-whisper transcription.
-
-Replaces the previous time-slice estimation. Transcribes the actual TTS-generated
-narration mp3, producing per-word timestamps that match what's spoken EXACTLY.
-
-Used by srt_export.py when faster_whisper is available; falls back otherwise.
-
-Built 2026-06-03 overnight.
-"""
+"""Word-level caption timing via faster-whisper, transcribing the actual TTS
+audio instead of estimating timing from character counts. srt_export.py uses
+this when faster-whisper is installed and falls back to the estimate otherwise."""
 import pathlib
 from typing import List, Dict
 

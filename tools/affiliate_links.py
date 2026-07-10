@@ -23,39 +23,39 @@ CREDS = pathlib.Path.home() / "RedditReels/config/credentials.json"
 # Curated themed product recommendations (Amazon search URLs with tag injected)
 THEME_PRODUCTS = {
     "antiwork": [
-        ("📕 Recommended read", "How to Find Fulfilling Work", "How+to+Find+Fulfilling+Work"),
-        ("🎧 For the commute", "Wireless Noise-Cancelling Headphones", "noise+cancelling+headphones+commute"),
+        (" Recommended read", "How to Find Fulfilling Work", "How+to+Find+Fulfilling+Work"),
+        (" For the commute", "Wireless Noise-Cancelling Headphones", "noise+cancelling+headphones+commute"),
     ],
     "JustNoMIL": [
-        ("📕 Recommended read", "Boundaries: When to Say Yes", "boundaries+when+to+say+yes"),
-        ("🎁 Self-care gift", "Aromatherapy Diffuser", "essential+oil+diffuser"),
+        (" Recommended read", "Boundaries: When to Say Yes", "boundaries+when+to+say+yes"),
+        (" Self-care gift", "Aromatherapy Diffuser", "essential+oil+diffuser"),
     ],
     "relationship_advice": [
-        ("📕 Recommended read", "Attached: The New Science of Love", "attached+amir+levine"),
-        ("📕 Recommended read", "The 5 Love Languages", "5+love+languages"),
+        (" Recommended read", "Attached: The New Science of Love", "attached+amir+levine"),
+        (" Recommended read", "The 5 Love Languages", "5+love+languages"),
     ],
     "AmItheAsshole": [
-        ("📕 Recommended read", "Crucial Conversations", "crucial+conversations+book"),
+        (" Recommended read", "Crucial Conversations", "crucial+conversations+book"),
     ],
     "tifu": [
-        ("📕 Recommended read", "The Subtle Art of Not Giving a F*ck", "subtle+art+of+not+giving"),
+        (" Recommended read", "The Subtle Art of Not Giving a F*ck", "subtle+art+of+not+giving"),
     ],
     "EntitledPeople": [
-        ("📕 Recommended read", "Boundaries Book", "boundaries+cloud+townsend"),
+        (" Recommended read", "Boundaries Book", "boundaries+cloud+townsend"),
     ],
     "confession": [
-        ("📕 Recommended read", "Radical Honesty", "radical+honesty+brad+blanton"),
+        (" Recommended read", "Radical Honesty", "radical+honesty+brad+blanton"),
     ],
     "PettyRevenge": [
-        ("📕 Recommended read", "The 48 Laws of Power", "48+laws+of+power"),
+        (" Recommended read", "The 48 Laws of Power", "48+laws+of+power"),
     ],
     "MaliciousCompliance": [
-        ("📕 Recommended read", "Bullshit Jobs by David Graeber", "bullshit+jobs+graeber"),
+        (" Recommended read", "Bullshit Jobs by David Graeber", "bullshit+jobs+graeber"),
     ],
 }
 
 DEFAULT_PRODUCTS = [
-    ("📕 Recommended read", "Atomic Habits", "atomic+habits+james+clear"),
+    (" Recommended read", "Atomic Habits", "atomic+habits+james+clear"),
 ]
 
 
@@ -77,7 +77,7 @@ def affiliate_block(subreddit: str, theme: str = "") -> str:
             products = prods[:2]
             break
 
-    lines = ["", "💡 Mentioned / inspired:"]
+    lines = ["", " Mentioned / inspired:"]
     for emoji_label, name, search in products:
         url = f"https://www.amazon.com/s?k={search}&tag={tag}"
         lines.append(f"{emoji_label}: {name} → {url}")

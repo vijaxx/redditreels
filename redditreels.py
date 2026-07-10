@@ -469,7 +469,7 @@ def get_winner_promo():
         from find_winner import find_top_video
         url, views = find_top_video()
         if url:
-            return f"🔥 The one everyone's watching: {url}"
+            return f" The one everyone's watching: {url}"
     except Exception as e:
         log.info(f"winner promo unavailable: {e}")
     return ""
@@ -497,22 +497,20 @@ def fb_hashtags(tags_hash: list, niche: list) -> list:
 
 
 def product_promo_line(cfg: dict) -> str:
-    """Soft cross-promo pointer to the Gumroad product catalog — turns views into
-    product traffic (the strategy's #1 near-term revenue lever). Appears in every
-    platform's description (YT/Rumble/FB), so the 95%-of-views FB audience gets funnelled.
+    """Soft cross-promo pointer to the Gumroad product catalog -- turns views into
+    product traffic, since most of these platforms don't otherwise monetize well
+    on their own. Appears in every platform's description (YT/Rumble/FB).
 
-    2026-07-08: activated. Like `series_signoff` above, this now DEFAULTS to the live
-    store URL Vijaxx attested in the weekly plan, so the funnel ships without a creds edit
-    (charter forbids editing credentials.json). A creds `product_catalog_url` still
-    overrides the default; set `product_promo_enabled: false` in creds to kill the line.
-    Copy is deliberately truthful to the store name (a puzzle press) — no false 'stories'
-    claim that would mislead viewers and erode trust."""
+    Defaults to the live store URL so this works out of the box without a creds
+    edit; a creds `product_catalog_url` overrides it, and `product_promo_enabled:
+    false` turns the line off entirely. Copy stays truthful to what the store
+    actually is (a puzzle press) rather than implying it sells something else."""
     if not cfg.get("product_promo_enabled", True):
         return ""
     url = (cfg.get("product_catalog_url") or "https://evergreenpuzzlepress.gumroad.com").strip()
     if not url:
         return ""
-    return f"📚 More from Evergreen Puzzle Press → {url}"
+    return f" More from Evergreen Puzzle Press → {url}"
 
 
 def build_description(script: dict, story: dict, cfg: dict,
@@ -522,9 +520,8 @@ def build_description(script: dict, story: dict, cfg: dict,
     trending = get_trending_tags()  # fresh tags per upload — algo loves freshness
     # NLP-extracted tags from the actual script content (proper nouns + repeated terms)
     nlp_tags = ["#" + t.lower().replace(" ","") for t in extract_nlp_tags(script.get("narration",""))]
-    # 2026-06-03 (UPGRADE F): per-video Claude-mined hashtags. Generates 25
-    # discoverability-optimized tags based on actual title + narration + theme.
-    # Falls back gracefully to static lists if Claude unavailable.
+    # Per-video Claude-mined hashtags: 25 discoverability-optimized tags based on the
+    # actual title, narration, and theme. Falls back to static lists if unavailable.
     mined_tags = []
     try:
         import sys as _s
@@ -546,7 +543,7 @@ def build_description(script: dict, story: dict, cfg: dict,
     winner_promo = get_winner_promo()  # cross-post bump to channel's top performer
     # SEO-dense first 100 chars: hook + sub + key terms (YT search reads first 100 chars heavily)
     seo_first_line = f"{script['hook']} | r/{sub} | reddit stories storytime"
-    # UPGRADE D 2026-06-03: affiliate links (Amazon Associates) — empty if not configured
+    # Amazon Associates affiliate links -- empty string if not configured
     affiliate = ""
     try:
         import sys as _s
@@ -555,10 +552,10 @@ def build_description(script: dict, story: dict, cfg: dict,
         affiliate = affiliate_block(sub, script.get("title_pattern", ""))
     except Exception: pass
     product_promo = product_promo_line(cfg)  # soft Gumroad/Amazon pointer (no-op if unset)
-    # 2026-06-25 task C — "Am I The Villain?" series sign-off: an engagement-bait CTA that ties
-    # to the recurring spoken verdict hook ("you decide — am I the villain?"). Config-driven,
-    # defaults to the approved live value so it ships without a creds edit.
-    series_signoff = (cfg.get("series_signoff", "⚖️ Verdict in the comments — you judge.")
+    # "Am I The Villain?" series sign-off: an engagement-bait CTA that ties back to the
+    # recurring spoken verdict hook ("you decide — am I the villain?"). Config-driven,
+    # defaults to the live value so it works without a creds edit.
+    series_signoff = (cfg.get("series_signoff", " Verdict in the comments — you judge.")
                       if cfg.get("series_enabled", True) else "")
     # Shared human-readable body (everything except the platform-specific hashtag line).
     body_lines = [
@@ -567,13 +564,13 @@ def build_description(script: dict, story: dict, cfg: dict,
         script["hook"],
         series_signoff,
         "",
-        f"📲 Original story: r/{sub} — {story.get('url','')}",
+        f" Original story: r/{sub} — {story.get('url','')}",
         bg,
         winner_promo,
         affiliate,        # added 2026-06-03 — empty unless amazon_affiliate_tag set in creds
         product_promo,    # added 2026-06-24 — soft product cross-promo (empty unless product_catalog_url set)
         "",
-        "🔥 DAILY SCHEDULE — 4 fresh reels/day IST",
+        " DAILY SCHEDULE — 4 fresh reels/day IST",
         "• 5:30 PM • 6:30 PM • 7:30 PM • 8:30 PM",
         "",
     ]
@@ -625,11 +622,11 @@ def run(args):
             append_used(story["url"])  # don't re-pick the same one
             continue
         candidate = json.loads((work / "script.json").read_text())
-        # MIN-LENGTH GATE (2026-06-07; variant-aware 2026-06-25 task A): reject too-short
-        # narrations that render to 10-15s stub reels (junk from short/regional source posts).
-        # The floor is now VARIANT-AWARE: the "rapid21" variant deliberately targets ~24s
-        # (FB's <30s +63% lever) so it must clear a LOWER floor (44 words ≈ ~22s) — still well
-        # above a stub; "full45" keeps the 70-word floor. Refetch rather than ship a stub.
+        # Rejects too-short narrations that would render to 10-15s stub reels (junk from
+        # short/regional source posts). The floor is variant-aware: "rapid21" deliberately
+        # targets ~24s for Facebook's under-30s preference, so it clears a lower floor (44
+        # words, ~22s) that's still well above a stub; "full45" keeps the 70-word floor.
+        # Refetches rather than shipping a stub.
         _nwords = len(candidate.get("narration", "").split())
         _floor = 44 if candidate.get("duration_variant") == "rapid21" else 70
         if _nwords < _floor:
@@ -965,25 +962,23 @@ def run(args):
             "target_duration_s": script.get("target_duration_s"),
             "source_type": story.get("source_type", "post"),       # "post" or "comment"
             "title_pattern": script.get("title_pattern"),          # which viral formula (A-E)
-            # 2026-06-25 task B: log-only semantic title<->story faithfulness verdict (free
-            # Groq judge). Observe a week before deciding on a re-prompt gate.
+            # Log-only semantic title<->story faithfulness verdict from the free Groq judge
             "title_faithful": script.get("title_faithful"),
             "title_faithful_reason": script.get("title_faithful_reason"),
             # Filled in later by tools/check_monetization.py once broader OAuth is granted
             "yt_monetization_real": None,
             "yt_monetization_checked_at": None,
-            # 2026-06-03 overnight round 2: quality tags per video for trend analysis
             "quality_tags": _quality_tag_safe(script),
         }) + "\n")
 
-    # 2026-06-03 overnight: notification on upload completion
+    # Notification on upload completion
     try:
         import sys as _sn
         _sn.path.insert(0, str(BASE / "tools"))
         from notify import notify
         platforms = [p for p in ["youtube","facebook","rumble"] if results.get(p)]
         notify(
-            f"✓ RR Posted ({len(platforms)}/3): {title[:55]}",
+            f" RR Posted ({len(platforms)}/3): {title[:55]}",
             f"Story: r/{story.get('subreddit','?')}\n"
             f"Platforms: {', '.join(platforms)}\n"
             f"YT: {results.get('youtube','-')}\n"

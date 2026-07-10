@@ -1,20 +1,11 @@
 #!/usr/bin/env python3
-"""
-tiktok_chrome.py — TikTok upload via Chrome :9223.
+"""TikTok upload via Chrome on :9223. Experimental, not wired into the
+scheduled run yet.
 
-CAUTION: TikTok's bot detection is aggressive. Selenium uploads work ~60-70% of
-the time but break often when TT changes their UI (~once per 2-3 weeks). This is
-a best-effort implementation — wraps every step in try/except, returns None on
-fail, never blocks the parent pipeline.
-
-REQUIREMENTS:
-- Manual one-time login: open Chrome on :9223 → tiktok.com → log in to user's account
-- TT cookies persist in the FrameWiseChrome profile
-
-API: upload(video_path, title, description, tags, cfg) → url or None
-
-Built 2026-06-03 overnight — experimental, NOT wired to live cron yet.
-"""
+Bot detection is aggressive enough that this only lands ~60-70% of the time
+and tends to break every couple of weeks when TikTok touches the UI. Every
+step is wrapped in try/except -- returns None on failure instead of taking the
+rest of the pipeline down with it. Needs a one-time manual login first."""
 import time, urllib.request, json, pathlib
 from typing import Optional
 
@@ -122,7 +113,7 @@ def upload(video_path: str, title: str, description: str, tags: list, cfg: dict)
             return links.length ? links[0].href : null;
             """)
             if url:
-                print(f"  ✓ TikTok ✅  {url}")
+                print(f"   TikTok   {url}")
                 return url
         except Exception: pass
         # Fallback: report current page

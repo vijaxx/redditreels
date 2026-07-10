@@ -1,22 +1,9 @@
 #!/usr/bin/env python3
-"""
-notify.py — push notifications to the user on key events.
+"""Push notifications on key pipeline events.
 
-Channels supported (graceful degradation if not configured):
-  - Telegram bot (set "telegram_bot_token" + "telegram_chat_id" in creds)
-  - macOS native notification (osascript fallback)
-  - Local file log (always)
-
-API:
-    notify(title, body, urgency="normal")
-        urgency: "normal" | "high" | "critical"
-        Sends via all configured channels.
-
-Built 2026-06-03 overnight. Used by:
-  - upload completion (notify "✓ Posted: <title>")
-  - viral alert (notify "🔥 VIRAL: <title>")
-  - failure-streak (notify "⚠️ 3 fires in a row failed")
-"""
+Tries Telegram first (needs telegram_bot_token + telegram_chat_id in creds),
+falls back to a native macOS notification, and always writes to a local log
+regardless of whether either channel is configured."""
 import json, pathlib, subprocess, urllib.request, urllib.parse
 from datetime import datetime
 

@@ -5,11 +5,11 @@ a failure on one does not stop the others."""
 import sys
 from pathlib import Path
 
-BASE = Path("/Users/vijaxx/RedditReels")
+BASE = Path.home() / "RedditReels"
 sys.path.insert(0, str(BASE))
 import redditreels as rr
 
-VIDEO = Path("/Users/vijaxx/Desktop/The_Pattern_Short.mp4")
+VIDEO = Path.home() / "Desktop" / "The_Pattern_Short.mp4"
 TITLE = "You're Not In Control — And I Can Prove It"
 CAPTION = (
     "Right now, you think you're in control. You're not. \U0001F9E0\n\n"
@@ -35,23 +35,23 @@ print(f"Uploading: {VIDEO.name}\nTitle: {TITLE}\n")
 try:
     vid = rr.upload_youtube(VIDEO, TITLE, CAPTION, TAGS, cfg, "public")
     results["youtube"] = f"https://youtube.com/shorts/{vid}"
-    print(f"YouTube ✅ {results['youtube']}", flush=True)
+    print(f"YouTube  {results['youtube']}", flush=True)
 except Exception as e:
-    print(f"YouTube ❌ {e}", flush=True)
+    print(f"YouTube  {e}", flush=True)
 
 # --- Facebook ---
 try:
     results["facebook"] = rr.upload_facebook(VIDEO, TITLE, CAPTION, TAGS, cfg)
-    print(f"Facebook ✅ {results['facebook']}", flush=True)
+    print(f"Facebook  {results['facebook']}", flush=True)
 except Exception as e:
-    print(f"Facebook ❌ {e}", flush=True)
+    print(f"Facebook  {e}", flush=True)
 
 # --- Rumble ---
 try:
     results["rumble"] = rr.upload_rumble(VIDEO, TITLE, CAPTION, TAGS, cfg)
-    print(f"Rumble ✅ {results['rumble']}", flush=True)
+    print(f"Rumble  {results['rumble']}", flush=True)
 except Exception as e:
-    print(f"Rumble ❌ {e}", flush=True)
+    print(f"Rumble  {e}", flush=True)
 
 print("\n=== DONE ===")
 for k, v in results.items():

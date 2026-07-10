@@ -1,20 +1,10 @@
 #!/usr/bin/env python3
-"""
-preupload_sanity.py — block bad reels from reaching upload step.
+"""Catches broken renders before they reach the upload step: missing or
+too-quiet audio, a duration mismatch against the narration script, a black
+final frame, a suspiciously small file, burned-in captions with bad contrast.
 
-Catches before live ship:
-1. Audio missing (yesterday's FW silent bug would have been caught here)
-2. Audio too quiet (mean < -30 dB = inaudible)
-3. Video duration mismatch with narration script
-4. Last 1s is pure black (failed render)
-5. File suspiciously small (<200KB = render failed)
-6. Captions burned but unreadable (low contrast)
-
-Returns (passed: bool, reasons: list[str]). Raises SystemExit(2) if fail and
---strict flag is set (orchestrator can check exit code).
-
-Built 2026-06-03 overnight. Wired into redditreels.py before upload step.
-"""
+Returns (passed, reasons); exits 2 on failure if --strict is set so a caller
+can check the exit code."""
 import sys, os, json, subprocess, argparse
 from pathlib import Path
 from typing import Tuple, List
@@ -114,9 +104,9 @@ def main():
 
     passed, reasons = check(Path(args.mp4), args.min_dur, args.max_dur)
     if passed:
-        print(f"✓ {args.mp4} passed all sanity checks")
+        print(f" {args.mp4} passed all sanity checks")
         sys.exit(0)
-    print(f"✗ {args.mp4} FAILED sanity:")
+    print(f" {args.mp4} FAILED sanity:")
     for r in reasons:
         print(f"  - {r}")
     sys.exit(2 if args.strict else 1)

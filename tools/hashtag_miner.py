@@ -97,7 +97,7 @@ def mine_hashtags(title: str, narration: str, subreddit: str, theme: str,
         if t and t not in seen:
             seen.add(t); out.append(t)
         if len(out) >= 25: break
-    # 2026-06-03 overnight round 2: filter out burned-out tags
+    # Filter out tags that have shown up too often lately
     try:
         from hashtag_rotator import filter_tags
         out = filter_tags(out)

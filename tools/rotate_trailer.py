@@ -58,7 +58,7 @@ def main():
         current = ch["items"][0].get("brandingSettings", {}).get("channel", {}).get("unsubscribedTrailer", "")
         log_lines.append(f"  current trailer: {current!r}")
         if current == top_id:
-            log_lines.append(f"  ✓ already set — no change needed")
+            log_lines.append(f"   already set — no change needed")
         else:
             # Update
             yt.channels().update(part="brandingSettings", body={
@@ -68,7 +68,7 @@ def main():
                                 "unsubscribedTrailer": top_id}
                 }
             }).execute()
-            log_lines.append(f"  ✓ TRAILER UPDATED: {current!r} → {top_id}")
+            log_lines.append(f"   TRAILER UPDATED: {current!r} → {top_id}")
     except Exception as e:
         log_lines.append(f"  FAIL: {e}")
 

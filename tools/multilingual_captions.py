@@ -1,15 +1,9 @@
 #!/usr/bin/env python3
-"""
-multilingual_captions.py — generate Hindi + Spanish captions for each YT video.
+"""Translates the English captions to Hindi and Spanish after upload and
+attaches them as additional caption tracks -- multilingual captions widen
+what YouTube search can match on.
 
-After upload, translates the English SRT to Hindi and Spanish (via Claude) and
-uploads them as additional caption tracks. YT search picks up multilingual
-captions = potential 2-3x discovery surface.
-
-Usage (post-upload, called from redditreels.py):
     add_translations(yt_video_id, english_srt_path)
-
-Built 2026-06-03 overnight.
 """
 import os, sys, json, pathlib, re, tempfile
 from typing import List
@@ -117,10 +111,10 @@ def add_translations(yt_video_id: str, english_srt_path: pathlib.Path, log=None)
                 "snippet": {"videoId": yt_video_id, "language": lang["code"],
                             "name": lang["name"], "isDraft": False}
             }, media_body=MediaFileUpload(str(tmp_srt), mimetype="application/octet-stream")).execute()
-            _l(f"  ✓ {lang['name']} captions uploaded")
+            _l(f"   {lang['name']} captions uploaded")
             result[lang["code"]] = True
         except Exception as e:
-            _l(f"  ✗ {lang['name']} failed: {e}")
+            _l(f"   {lang['name']} failed: {e}")
             result[lang["code"]] = False
             result.setdefault("errors", []).append(f"{lang['code']}: {e}")
     return result
