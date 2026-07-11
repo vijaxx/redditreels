@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Compress Reddit post into open-loop hook + 45s narration via Claude haiku."""
+from __future__ import annotations
 import json, os, pathlib, sys
+from typing import Any
 import sys as _lsys, pathlib as _lpath; _lsys.path.insert(0, str(_lpath.Path(__file__).resolve().parents[1])); from llm import Anthropic
 
 import os, pathlib
@@ -183,10 +185,10 @@ BANNED_REPLACEMENTS = {
 }
 
 
-def scrub_text(text: str) -> tuple[str, list]:
+def scrub_text(text: str) -> tuple[str, list[str]]:
     """Replace banned words with ad-safe substitutes. Returns (scrubbed_text, list_of_hits)."""
     import re
-    hits = []
+    hits: list[str] = []
     for pat, rep in BANNED_REPLACEMENTS.items():
         matches = re.findall(pat, text, flags=re.IGNORECASE)
         if matches:
@@ -197,7 +199,7 @@ def scrub_text(text: str) -> tuple[str, list]:
     return text, hits
 
 
-def judge_faithful(title: str, narration: str) -> tuple:
+def judge_faithful(title: str, narration: str) -> tuple[bool | None, str]:
     """Semantic title<->story faithfulness judge. Returns (faithful: bool|None,
     reason: str), routed through the llm shim to Groq's free tier. Log-only --
     it never gates or re-prompts, and any failure returns (None, ...) so a fire
@@ -228,7 +230,7 @@ def judge_faithful(title: str, narration: str) -> tuple:
         return None, f"judge-error: {e}"[:120]
 
 
-def main():
+def main() -> None:
     s = json.load(open(IN))
     alt_hook_directive = ""
     if os.environ.get("RR_ALT_HOOK"):
@@ -251,7 +253,7 @@ def main():
         insights = (insights + "\n\n" + _cm.brief("reels")).strip()
     except Exception:
         pass
-    def _gen(extra=""):
+    def _gen(extra: str = "") -> dict[str, Any]:
         msg = client.messages.create(
             model="claude-haiku-4-5",
             max_tokens=900,
@@ -306,7 +308,7 @@ def main():
     # crude words into titles ("[N]...", "...CartographerKind6228...", "pissed in a sink").
     # These kill click-through. Strip them; if the title ends up broken, rebuild from the hook.
     import re as _re
-    def _clean_title(t, hook):
+    def _clean_title(t: str, hook: str) -> str:
         t = (t or "").strip()
         # detect junk BEFORE stripping — if present, we rebuild from hook (patching leaves gaps)
         had_junk = bool(_re.search(r"\[[^\]]*\]|\bu/[A-Za-z0-9_-]+\b|[A-Za-z][A-Za-z]+[_-]?\d{2,}", t))

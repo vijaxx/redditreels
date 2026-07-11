@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 """Pull a high-engagement Reddit self-post OR a juicy top-comment via RSS feed."""
+from __future__ import annotations
 import html, json, os, pathlib, random, re, sys, urllib.request, urllib.error
+from typing import Any
+
+Story = dict[str, Any]
 
 # 2026-06-10 DISABLED (was 0.40): using a random TOP COMMENT as the "story" produced
 # garbage — comments aren't narratives (e.g. "whats the big deal, feel his boner later"),
@@ -43,7 +47,7 @@ SERIES_SUBS = [
     "antiwork", "NoStupidQuestions", "MaliciousCompliance",
 ]
 
-def series_active_subs(stable, k=6, off_brand_p=0.15):
+def series_active_subs(stable: list[str], k: int = 6, off_brand_p: float = 0.15) -> list[str]:
     """Return up to k subs heavily weighted to SERIES_SUBS, with a small chance of ONE
     off-brand sub for variety. Falls back to plain sampling if no series sub is available
     (e.g. all blacklisted).
@@ -83,7 +87,7 @@ OUT.parent.mkdir(parents=True, exist_ok=True)
 
 UA = "Mozilla/5.0 (compatible; RedditReels/1.0; +https://example.com)"
 
-def fetch_rss(sub, t=None, limit=20):
+def fetch_rss(sub: str, t: str | None = None, limit: int = 20) -> str | None:
     """Fetch top posts. `t` default rotates: 75% 'day' (fresh), 20% 'week' (depth), 5% 'hour' (real-time pulse).
     Heavier weight on fresh content = less audience overlap with what's already gone viral."""
     if t is None:
@@ -101,8 +105,8 @@ def fetch_rss(sub, t=None, limit=20):
         print(f"  ! {sub}: {e}", file=sys.stderr)
         return None
 
-def parse_entries(rss_body, sub):
-    entries = []
+def parse_entries(rss_body: str, sub: str) -> list[Story]:
+    entries: list[Story] = []
     for raw in rss_body.split("<entry>")[1:]:
         title_m = re.search(r"<title>(.*?)</title>", raw, re.S)
         link_m  = re.search(r'<link href="([^"]+)"', raw)
@@ -125,7 +129,7 @@ def parse_entries(rss_body, sub):
         })
     return entries
 
-def is_good(p):
+def is_good(p: Story) -> bool:
     t = p["selftext"]
     # 2026-06-07 FIX: raised min 400→700. A 400-char post rewrites to ~25-35 words
     # (~12s reel) — too short to retain. 700+ chars gives enough for a real ~40s story.
@@ -140,7 +144,7 @@ def is_good(p):
 
 # ---- Top-comments-as-source: pull thread comments via the post's .rss endpoint ----
 
-def fetch_top_comments(post_url: str, min_chars: int = 80, max_chars: int = 600, top_n: int = 15) -> list:
+def fetch_top_comments(post_url: str, min_chars: int = 80, max_chars: int = 600, top_n: int = 15) -> list[dict[str, Any]]:
     """Fetch top comments from a post URL via RSS. Returns list of dicts."""
     # Strip trailing slash and append .rss
     base = post_url.rstrip("/")
@@ -151,7 +155,7 @@ def fetch_top_comments(post_url: str, min_chars: int = 80, max_chars: int = 600,
     except Exception as e:
         print(f"  comment fetch failed: {e}", file=sys.stderr)
         return []
-    out = []
+    out: list[dict[str, Any]] = []
     for raw in body.split("<entry>")[1:]:  # entry[0] is the post itself, rest are comments
         content_m = re.search(r'<content type="html">(.*?)</content>', raw, re.S)
         author_m  = re.search(r'<name>(.*?)</name>', raw, re.S)
@@ -170,7 +174,7 @@ def fetch_top_comments(post_url: str, min_chars: int = 80, max_chars: int = 600,
     return out
 
 
-def score_comment(c: dict) -> float:
+def score_comment(c: dict[str, Any]) -> float:
     """Heuristic score: prefer short-punchy, with strong hook signals."""
     t = c["text"].lower()
     score = 0.0
@@ -189,7 +193,7 @@ def score_comment(c: dict) -> float:
     return score
 
 
-def fetch_forced_story(force_url: str) -> dict:
+def fetch_forced_story(force_url: str) -> Story:
     """Fetch a specific Reddit story by URL (for rerender_losers replay).
     Strips the trailing slash + uses Reddit's .json endpoint for clean data."""
     import urllib.request, json as _json
@@ -211,9 +215,10 @@ def fetch_forced_story(force_url: str) -> dict:
     }
 
 
-def main():
+def main() -> None:
     # BUG FIX 2026-05-31: honor FORCE_STORY_URL env var (rerender_losers replay).
     # Previously this env var was silently ignored.
+    pick: Story | None
     force = os.environ.get("FORCE_STORY_URL")
     if force:
         try:

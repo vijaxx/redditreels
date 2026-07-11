@@ -2,11 +2,12 @@
 """Word-level caption timing via faster-whisper, transcribing the actual TTS
 audio instead of estimating timing from character counts. srt_export.py uses
 this when faster-whisper is installed and falls back to the estimate otherwise."""
+from __future__ import annotations
 import pathlib
-from typing import List, Dict
+from typing import Any
 
 
-def transcribe_to_word_timings(audio_path: pathlib.Path) -> List[Dict]:
+def transcribe_to_word_timings(audio_path: pathlib.Path) -> list[dict[str, Any]]:
     """Returns list of {word, start, end} via faster-whisper word_timestamps."""
     try:
         from faster_whisper import WhisperModel
@@ -32,7 +33,7 @@ def transcribe_to_word_timings(audio_path: pathlib.Path) -> List[Dict]:
         model = WhisperModel("tiny.en", device="cpu", compute_type="int8")
         segments, _ = model.transcribe(str(transcribe_path), word_timestamps=True,
                                          vad_filter=False, beam_size=1)
-        out = []
+        out: list[dict[str, Any]] = []
         for s in segments:
             for w in (s.words or []):
                 out.append({"word": w.word.strip(), "start": w.start, "end": w.end})
@@ -48,9 +49,9 @@ def whisper_srt(audio_path: pathlib.Path, max_chars: int = 42, max_secs: float =
     words = transcribe_to_word_timings(audio_path)
     if not words: return ""
     # Reuse the chunking logic from srt_export
-    chunks = []
-    cur_words = []
-    cur_start = None
+    chunks: list[dict[str, Any]] = []
+    cur_words: list[dict[str, Any]] = []
+    cur_start: float | None = None
     for w in words:
         if cur_start is None: cur_start = w["start"]
         cur_words.append(w)
@@ -64,11 +65,11 @@ def whisper_srt(audio_path: pathlib.Path, max_chars: int = 42, max_secs: float =
         chunks.append({"start": cur_start, "end": cur_words[-1]["end"],
                         "text": " ".join(x["word"] for x in cur_words)})
 
-    def fmt_ts(t):
+    def fmt_ts(t: float) -> str:
         h = int(t // 3600); m = int((t % 3600) // 60)
         s = t % 60; ms = int((s - int(s)) * 1000); s = int(s)
         return f"{h:02d}:{m:02d}:{s:02d},{ms:03d}"
-    out = []
+    out: list[str] = []
     for i, c in enumerate(chunks, 1):
         out.append(f"{i}\n{fmt_ts(c['start'])} --> {fmt_ts(c['end'])}\n{c['text']}\n")
     return "\n".join(out)

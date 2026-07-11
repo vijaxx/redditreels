@@ -36,14 +36,14 @@ PILL_FONT_PATHS = [
 ]
 
 
-def _load_font(paths, size):
+def _load_font(paths: list[str], size: int) -> ImageFont.FreeTypeFont | ImageFont.ImageFont:
     for p in paths:
         try: return ImageFont.truetype(p, size)
         except Exception: continue
     return ImageFont.load_default()
 
 
-def _extract_striking_frame(reel: pathlib.Path, out_jpg: pathlib.Path):
+def _extract_striking_frame(reel: pathlib.Path, out_jpg: pathlib.Path) -> pathlib.Path:
     """Sample several frames from the reel, pick the one with the highest visual
     energy (color variance — proxy for 'interesting moment')."""
     tmpdir = pathlib.Path(tempfile.mkdtemp(prefix="thumb_"))
@@ -68,7 +68,7 @@ def _extract_striking_frame(reel: pathlib.Path, out_jpg: pathlib.Path):
     except Exception:
         face_cascade = None
 
-    best_score = -1
+    best_score = -1.0
     best = frames[0]
     for f in frames:
         img = Image.open(f).convert("RGB")
@@ -119,7 +119,7 @@ def _extract_thumb_hook(hook_text: str) -> tuple[str, str]:
     return line1, accent.upper()
 
 
-def build_thumbnail(reel: pathlib.Path, hook_text: str, out_png: pathlib.Path):
+def build_thumbnail(reel: pathlib.Path, hook_text: str, out_png: pathlib.Path) -> pathlib.Path:
     """Render a 1280x720 thumbnail and save as PNG."""
     out_png.parent.mkdir(parents=True, exist_ok=True)
     tmp = out_png.parent / "_thumb_frame.jpg"
@@ -133,7 +133,7 @@ def build_thumbnail(reel: pathlib.Path, hook_text: str, out_png: pathlib.Path):
     crop_h = src_h // 2
     crop_top = (src_h - crop_h) // 2
     bg = bg.crop((0, crop_top, src_w, crop_top + crop_h))
-    bg = bg.resize((THUMB_W, THUMB_H), Image.LANCZOS)
+    bg = bg.resize((THUMB_W, THUMB_H), Image.Resampling.LANCZOS)
 
     # AGGRESSIVE color grade for clickbait pop: saturation +, contrast +, vignette darken
     bg = ImageEnhance.Color(bg).enhance(1.45)        # punch saturation
@@ -178,8 +178,8 @@ def build_thumbnail(reel: pathlib.Path, hook_text: str, out_png: pathlib.Path):
     while size > 60:
         f = _load_font(FONT_PATHS, size)
         # Measure with stroke for accurate width
-        widths = []
-        total = 0
+        widths: list[float] = []
+        total: float = 0
         for w in words:
             bb = d.textbbox((0,0), w+" ", font=f, stroke_width=10)
             widths.append(bb[2]-bb[0])
@@ -198,8 +198,8 @@ def build_thumbnail(reel: pathlib.Path, hook_text: str, out_png: pathlib.Path):
         widths.append(bb[2]-bb[0])
         total += widths[-1]
 
-    x = (THUMB_W - total) // 2
-    y = (THUMB_H - size) // 2 - 20
+    x: float = (THUMB_W - total) // 2
+    y: float = (THUMB_H - size) // 2 - 20
 
     for w_i, w in enumerate(words):
         use_f = accent_f if w == accent_word else f
@@ -223,6 +223,8 @@ def build_thumbnail(reel: pathlib.Path, hook_text: str, out_png: pathlib.Path):
     pb = d.textbbox((0,0), pill_text, font=pill_font)
     pw, ph = pb[2]-pb[0], pb[3]-pb[1]
     pad = 18
+    px0: float
+    py0: float
     px0, py0 = 40, THUMB_H - 40 - (ph + pad*2)
     d.rounded_rectangle([px0, py0, px0+pw+pad*2, py0+ph+pad*2], radius=14, fill=(255,69,0,255))
     d.text((px0+pad, py0+pad-8), pill_text, font=pill_font, fill=(255,255,255,255))
