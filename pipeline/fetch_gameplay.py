@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Fetch a satisfying/gameplay-style background loop from Pixabay (free)."""
+from __future__ import annotations
 import json, os, pathlib, sys, urllib.parse, urllib.request
+from typing import Any
 
 import os, pathlib
 ROOT = pathlib.Path(os.environ.get('RR_ROOT', os.path.expanduser('~/RedditReels')))
@@ -25,18 +27,18 @@ QUERIES = [
     "parkour video game",
 ]
 
-def search(q):
+def search(q: str) -> list[dict[str, Any]]:
     url = (
         f"https://pixabay.com/api/videos/?key={KEY}&q={urllib.parse.quote(q)}"
         f"&per_page=20&safesearch=true&video_type=film"
     )
     return json.load(urllib.request.urlopen(url))["hits"]
 
-def main():
+def main() -> None:
     target_dur_min = 15  # we'll loop if shorter
     target_dur_max = 60
-    best = None
-    best_score = -1
+    best: tuple[str, dict[str, Any], dict[str, Any]] | None = None
+    best_score = -1.0
     for q in QUERIES:
         try:
             hits = search(q)

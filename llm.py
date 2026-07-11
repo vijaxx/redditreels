@@ -123,7 +123,7 @@ def _ollama(system, user, max_tokens, _key=None):
     return d.get("response", "")
 
 
-def complete(system: str, user: str, max_tokens: int = 1500, model: str = None) -> str:
+def complete(system: str, user: str, max_tokens: int = 1500, model: str | None = None) -> str:
     """Unified free-first completion with patient backoff + FREE-provider fallback.
 
     2026-06-22 (token-cost guard): Groq's free-tier 429 is a PER-MINUTE rate window, not a

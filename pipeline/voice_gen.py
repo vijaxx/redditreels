@@ -1,7 +1,11 @@
 #!/usr/bin/env python3
 """Generate edge-tts narration with per-word timings (WordBoundary)."""
+from __future__ import annotations
 import asyncio, json, os, pathlib, sys
+from typing import Any
 import edge_tts
+
+Timing = dict[str, Any]
 
 import random as _rand
 # Voice rotation pool — 5 distinct US neural voices. Random pick per fire = fresher feel,
@@ -32,10 +36,10 @@ IN  = pathlib.Path((WORK / "script.json"))
 OUT_MP3 = pathlib.Path((WORK / "narration.mp3"))
 OUT_TIMINGS = pathlib.Path((WORK / "timings.json"))
 
-async def _synth_once(text, mp3_path):
+async def _synth_once(text: str, mp3_path: pathlib.Path) -> list[Timing]:
     """Single TTS attempt. Returns timings list (may be truncated if stream cuts off)."""
     comm = edge_tts.Communicate(text, voice=VOICE, rate=RATE, boundary="WordBoundary")
-    timings = []
+    timings: list[Timing] = []
     with open(mp3_path, "wb") as f:
         async for chunk in comm.stream():
             if chunk["type"] == "audio":
@@ -47,7 +51,7 @@ async def _synth_once(text, mp3_path):
     return timings
 
 
-async def _synth_chunked(text, mp3_path):
+async def _synth_chunked(text: str, mp3_path: pathlib.Path) -> list[Timing]:
     """Fallback: split text into sentence chunks, TTS each separately, concat audio.
     Reduces per-call failure surface — if one sentence fails, retry just that one."""
     import re as _re, subprocess as _sp, tempfile as _tf, pathlib as _p
@@ -58,12 +62,12 @@ async def _synth_chunked(text, mp3_path):
         return await _synth_once(text, mp3_path)
 
     tmp = _p.Path(_tf.mkdtemp(prefix="tts_chunk_"))
-    all_timings = []
-    chunk_mp3s = []
+    all_timings: list[Timing] = []
+    chunk_mp3s: list[pathlib.Path] = []
     cumulative_offset_s = 0.0
     for i, part in enumerate(parts):
         chunk_mp3 = tmp / f"c{i:03d}.mp3"
-        chunk_timings = None
+        chunk_timings: list[Timing] | None = None
         for retry in range(3):
             try:
                 chunk_timings = await _synth_once(part, chunk_mp3)
@@ -103,7 +107,7 @@ async def _synth_chunked(text, mp3_path):
     return all_timings
 
 
-async def synth(text, expected_words: int):
+async def synth(text: str, expected_words: int) -> list[Timing]:
     """TTS with verify-and-retry. If first attempt captures <85% of expected words
     (sign of edge-tts mid-stream truncation), retry up to 2 more times. If still bad,
     fall back to chunked synthesis (one TTS call per sentence)."""
@@ -129,7 +133,7 @@ async def synth(text, expected_words: int):
     return timings
 
 
-def _prepend_stinger(mp3_path: pathlib.Path, timings: list, stinger_path: pathlib.Path) -> list:
+def _prepend_stinger(mp3_path: pathlib.Path, timings: list[Timing], stinger_path: pathlib.Path) -> list[Timing]:
     """Prepend stinger SFX before the narration. Shifts timings forward.
     Effect: attention-grabbing audio cue at video start before voice."""
     import subprocess as _sp
@@ -159,7 +163,7 @@ def _prepend_stinger(mp3_path: pathlib.Path, timings: list, stinger_path: pathli
     return [{"word": t["word"], "start": t["start"]+stinger_dur, "end": t["end"]+stinger_dur} for t in timings]
 
 
-def main():
+def main() -> None:
     script = json.load(open(IN))
     text = script["narration"]
     expected_words = len(text.split())

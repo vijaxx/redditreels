@@ -10,7 +10,9 @@ killing fires).
 
 Each cached item is a normal story dict {subreddit,title,selftext,url,author,source_type}.
 """
+from __future__ import annotations
 import json, pathlib, sys, time, random
+from typing import Any
 
 # reuse fetch_story's fetchers/validators (import is safe — main() is guarded)
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
@@ -20,27 +22,29 @@ ROOT  = pathlib.Path.home() / "RedditReels"
 CACHE = ROOT / "logs" / "story_cache.json"
 USED  = ROOT / "logs" / "used_stories.json"
 
+Story = dict[str, Any]
 
-def _used_urls():
+
+def _used_urls() -> set[str]:
     try:
         return {u["url"] for u in json.loads(USED.read_text())}
     except Exception:
         return set()
 
 
-def load():
+def load() -> list[Story]:
     try:
         return json.loads(CACHE.read_text())
     except Exception:
         return []
 
 
-def save(items):
+def save(items: list[Story]) -> None:
     CACHE.parent.mkdir(parents=True, exist_ok=True)
     CACHE.write_text(json.dumps(items, indent=2, ensure_ascii=False))
 
 
-def fill(target=25):
+def fill(target: int = 25) -> int:
     """Gentle sweep across stable subs (spaced 3s) until the pool reaches `target`."""
     used = _used_urls()
     pool = load()
@@ -77,7 +81,7 @@ def fill(target=25):
     return len(pool)
 
 
-def pop():
+def pop() -> Story | None:
     """Return + remove the next cached story (FIFO). None if cache empty."""
     pool = load()
     if not pool:

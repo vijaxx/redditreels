@@ -1,7 +1,13 @@
 #!/usr/bin/env python3
 """Compose RedditReels demo: full-screen gameplay loop + word-synced karaoke captions + voice + subreddit header."""
+from __future__ import annotations
 import json, math, os, pathlib, random, shutil, subprocess, tempfile
+from typing import Any
 from PIL import Image, ImageDraw, ImageFont
+
+Timing = dict[str, Any]
+Chunk = dict[str, Any]
+CaptionPng = dict[str, Any]
 
 ROOT = pathlib.Path(os.environ.get("RR_ROOT", os.path.expanduser("~/RedditReels")))
 WORK = pathlib.Path(os.environ.get("RR_WORK", str(ROOT / "output")))
@@ -17,9 +23,9 @@ BG_MANIFEST = {
     "gameplay.mp4": "Background: stock gameplay loop",
 }
 
-def _pick_bg(rng=None):
+def _pick_bg(rng: random.Random | None = None) -> tuple[pathlib.Path, str]:
     """Return (path, credit_line). Picks at random across whatever bg files exist in clips/."""
-    candidates = []
+    candidates: list[tuple[pathlib.Path, str]] = []
     for name, credit in BG_MANIFEST.items():
         p = ROOT / "clips" / name
         if p.exists() and p.stat().st_size > 1_000_000:
@@ -51,7 +57,7 @@ HEADER_FONT_PATHS = [
     "/System/Library/Fonts/Helvetica.ttc",
     "/System/Library/Fonts/Supplemental/Arial.ttf",
 ]
-def load_font(paths, size):
+def load_font(paths: list[str], size: int) -> ImageFont.FreeTypeFont | ImageFont.ImageFont:
     _ov = __import__("os").environ.get("RR_CAPTION_FONT")
     if _ov:
         try: return ImageFont.truetype(_ov, size)
@@ -61,20 +67,20 @@ def load_font(paths, size):
         except Exception: continue
     return ImageFont.load_default()
 
-def run(cmd):
+def run(cmd: list[Any]) -> None:
     print("$", " ".join(str(c) for c in cmd[:8]) + (" …" if len(cmd) > 8 else ""))
     subprocess.check_call(cmd)
 
-def ffprobe_dur(p):
+def ffprobe_dur(p: pathlib.Path) -> float:
     out = subprocess.check_output(["ffprobe","-v","error","-show_entries","format=duration","-of","csv=p=0", str(p)])
     return float(out.strip())
 
 # ---------- captions: chunk words into 1-3 word phrases ----------
 
-def chunk_timings(timings, max_words=3):
+def chunk_timings(timings: list[Timing], max_words: int = 3) -> list[Chunk]:
     """Group word timings into short chunks. Break on punctuation or pause > 0.35s."""
-    chunks = []
-    cur = []
+    chunks: list[Chunk] = []
+    cur: list[Timing] = []
     for i, w in enumerate(timings):
         cur.append(w)
         word = w["word"]
@@ -99,7 +105,7 @@ def chunk_timings(timings, max_words=3):
 
 # ---------- per-chunk PNG (centered, drop-shadow, yellow highlight on active word) ----------
 
-def render_chunk_pngs(chunks, out_dir, subreddit=None):
+def render_chunk_pngs(chunks: list[Chunk], out_dir: pathlib.Path, subreddit: str | None = None) -> list[CaptionPng]:
     """TikTok-style captions: big bold font, thick black stroke, yellow highlight on active word.
     No subreddit pill — pure text drives attention."""
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -108,7 +114,7 @@ def render_chunk_pngs(chunks, out_dir, subreddit=None):
     STROKE     = 11
     LINE_H     = 150
     YELLOW     = (255, 235, 59, 245)
-    pngs = []
+    pngs: list[CaptionPng] = []
     for ci, c in enumerate(chunks):
         for wi, w in enumerate(c["words"]):
             img = Image.new("RGBA",(W,H),(0,0,0,0))
@@ -131,8 +137,8 @@ def render_chunk_pngs(chunks, out_dir, subreddit=None):
             for li, line in enumerate(lines):
                 line_words = line.split()
                 # measure all words on this line using ACTIVE font for the active one so layout doesn't shift jarringly
-                widths = []
-                total = 0
+                widths: list[float] = []
+                total: float = 0
                 for lw_i, lw in enumerate(line_words):
                     global_idx = sum(len(l.split()) for l in lines[:li]) + lw_i
                     is_active = (global_idx == wi)
@@ -141,7 +147,7 @@ def render_chunk_pngs(chunks, out_dir, subreddit=None):
                     ww = bb[2]-bb[0]
                     widths.append(ww)
                     total += ww
-                x = (W - total)//2
+                x: float = (W - total)//2
                 for lw_i, lw in enumerate(line_words):
                     global_idx = sum(len(l.split()) for l in lines[:li]) + lw_i
                     is_active = (global_idx == wi)
@@ -171,7 +177,7 @@ def render_chunk_pngs(chunks, out_dir, subreddit=None):
 
 # ---------- ffmpeg compose ----------
 
-def build_loop_bg(narration_dur, out_path):
+def build_loop_bg(narration_dur: float, out_path: pathlib.Path) -> None:
     """Pick a random window from gameplay source to cover narration_dur, scale-crop to 1080x1920, mute.
 
     Adds PATTERN INTERRUPTS at 3s/8s/15s — the documented retention drop-off cliffs on
@@ -192,7 +198,7 @@ def build_loop_bg(narration_dur, out_path):
     # Use ffmpeg's `zoompan` is complex; simpler = a chain of `scale` + crop with time-keyed
     # enable conditions, using the `lutyuv` or `scale` with time-varying parameters.
     # Simplest reliable approach: apply a brief eq+saturate punch at each cliff.
-    interrupt_pulses = []
+    interrupt_pulses: list[str] = []
     for t in (3.0, 8.0, 15.0):
         if t + 0.3 < narration_dur:
             # 0.15s pulse: brighter + slight saturation bump
@@ -225,12 +231,12 @@ def build_loop_bg(narration_dur, out_path):
         print(f"  pattern-interrupts: {len(interrupt_pulses)} pulses at retention cliffs")
     run(cmd)
 
-def overlay_captions(video_in, pngs, out_path):
+def overlay_captions(video_in: pathlib.Path, pngs: list[CaptionPng], out_path: pathlib.Path) -> None:
     """Overlay each caption PNG only during its word's time range. Chained overlays."""
-    inputs = ["-i", str(video_in)]
+    inputs: list[str] = ["-i", str(video_in)]
     for p in pngs:
         inputs += ["-i", p["path"]]
-    filters = []
+    filters: list[str] = []
     last = "0:v"
     for i, p in enumerate(pngs):
         lbl = f"v{i}"
@@ -245,7 +251,7 @@ def overlay_captions(video_in, pngs, out_path):
         "-c:v","libx264","-preset","veryfast","-crf","20","-r",str(FPS), str(out_path)
     ])
 
-def mux_audio(video_in, audio_in, out_path):
+def mux_audio(video_in: pathlib.Path, audio_in: pathlib.Path, out_path: pathlib.Path) -> None:
     run([
         "ffmpeg","-y","-loglevel","error",
         "-i", str(video_in), "-i", str(audio_in),
@@ -253,7 +259,7 @@ def mux_audio(video_in, audio_in, out_path):
     ])
 
 
-def make_loopable(video_in, out_path, freeze_secs: float = 0.4):
+def make_loopable(video_in: pathlib.Path, out_path: pathlib.Path, freeze_secs: float = 0.4) -> None:
     """Append a brief frame-0 freeze at the end so the loop point feels intentional.
     YT's algo rewards 'rewatches' — making the end visually echo the start tricks
     the algo into reading auto-restart as engagement vs disengagement.
@@ -276,7 +282,7 @@ def make_loopable(video_in, out_path, freeze_secs: float = 0.4):
         "-c:a","aac","-b:a","160k", str(out_path)
     ])
 
-def build_engagement_overlays(out_dir, narration_dur):
+def build_engagement_overlays(out_dir: pathlib.Path, narration_dur: float) -> list[CaptionPng]:
     """Build engagement + attention PNG overlays:
       - "WAIT FOR IT..." at the START (0.0-0.5s) — scroll-stopping attention grabber
       - "COMMENT ↓" at 60% of narration (peak attention drop-off point)
@@ -284,7 +290,7 @@ def build_engagement_overlays(out_dir, narration_dur):
       - "FOLLOW FOR PART 2 →" big end-card overlay (last 1.8s)
     Returns [{path, start, end}] for the overlay chain."""
     out_dir.mkdir(exist_ok=True, parents=True)
-    pngs = []
+    pngs: list[CaptionPng] = []
     # 2026-06-03 overnight: rotate through 7 first-frame hook templates so the
     # same overlay doesn't burn out from algorithm exposure (FB+YT both detect
     # repeated frame patterns and may de-prioritize).
@@ -324,7 +330,8 @@ def build_engagement_overlays(out_dir, narration_dur):
         tw, th = bbox[2]-bbox[0], bbox[3]-bbox[1]
         pad = 28
         box_w, box_h = tw + pad*2, th + pad*2
-        x0 = (W - box_w) // 2
+        x0: float = (W - box_w) // 2
+        y0: float
         if pos == "top":
             y0 = 220
         elif pos == "bottom":
@@ -351,7 +358,7 @@ def build_engagement_overlays(out_dir, narration_dur):
     return pngs
 
 
-def main():
+def main() -> None:
     timings = json.load(open(TIMINGS))
     story   = json.load(open(STORY))
     narration_dur = timings[-1]["end"] + 0.3

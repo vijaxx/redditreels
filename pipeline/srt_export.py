@@ -11,14 +11,16 @@ Strategy: group words into 1.5-2.5s phrases (natural reading pace), output SRT.
 """
 from __future__ import annotations
 import json, os, pathlib, sys
+from typing import Any
 
 
-def timings_to_srt(timings: list, max_chars_per_line: int = 42,
+def timings_to_srt(timings: list[dict[str, Any]], max_chars_per_line: int = 42,
                    max_chunk_secs: float = 2.5) -> str:
     """Convert per-word timings into SRT chunks suitable for YT caption upload."""
     if not timings: return ""
-    chunks = []
-    cur_words, cur_start = [], None
+    chunks: list[dict[str, Any]] = []
+    cur_words: list[str] = []
+    cur_start: float | None = None
     for w in timings:
         if cur_start is None:
             cur_start = w["start"]
@@ -33,12 +35,12 @@ def timings_to_srt(timings: list, max_chars_per_line: int = 42,
     if cur_words and cur_start is not None:
         chunks.append({"start": cur_start, "end": timings[-1]["end"], "text": " ".join(cur_words)})
 
-    def fmt_srt_time(t):
+    def fmt_srt_time(t: float) -> str:
         h = int(t // 3600); m = int((t % 3600) // 60); s = int(t % 60)
         ms = int((t - int(t)) * 1000)
         return f"{h:02d}:{m:02d}:{s:02d},{ms:03d}"
 
-    lines = []
+    lines: list[str] = []
     for i, c in enumerate(chunks, 1):
         lines.append(str(i))
         lines.append(f"{fmt_srt_time(c['start'])} --> {fmt_srt_time(c['end'])}")
